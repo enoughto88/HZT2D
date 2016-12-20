@@ -1,7 +1,7 @@
 !***********************************************************************
-!*****              Axial-Azimuthal 2D Plasma Simulator            *****
+!*****       HZT2D: Axial-Azimuthal 2D Hall Thruster Simulator     *****
 !*****          Developed by Rei Kawashima (Univ. of Tokyo)        *****
-!*****                   Last Update: 06/20/2016                   *****
+!*****             Latest Version Distributed at GitHub            *****
 !***********************************************************************
 
 program main
@@ -82,7 +82,24 @@ program main
                vymax = dabs(pic(m,4))
             endif
          enddo
+      endif
 
+      call OutputDisplay
+      call OutputFile
+   enddo MARCH
+
+   write(*,*) 'Program end...'
+
+   stop
+contains
+
+
+!--------------- Linux console output for monitoring -------------------
+
+   subroutine OutputDisplay
+
+
+      if(mod(it,ISMP).eq.0) then
          write(*,'(A42)')         '*****************************************'
          write(*,'(A8,I10,A8)')  '        ',nstp,'-th step'
          write(*,*)               '---------------- Fluid ------------------'
@@ -109,7 +126,18 @@ program main
          write(*,'(A20,E12.3,A)') '           Fastest =',dmax1(vxmax,vymax),''
          write(*,'(A20,E12.3,A)') '        CFL Number =',dmax1(vxmax*DTPIC/DXL,vymax*DTPIC/DYL),''
          write(*,'(A20,I10,A)')   '          CPU Time =',time_pic,''
+      endif
 
+      return
+   endsubroutine OutputDisplay
+
+
+
+!----------------- File output for numerical results -------------------
+
+   subroutine OutputFile
+
+      if(mod(it,ISMP).eq.0) then
          write(cname,'(I6.6)') nstp
          dname = '/output/distribution/'
          open(unit=22,file=trim(TOPDIR)//trim(dname)//'distribution.'//&
@@ -181,13 +209,11 @@ program main
          close(24)
       endif
 
-   enddo MARCH
+      return
+   endsubroutine OutputFile
 
-   write(*,*) 'Program end...'
-
-
-   stop
 end program main
+
 
 
 
@@ -227,7 +253,6 @@ subroutine ElectricField(phii,efnd)
 
    return
 endsubroutine
-
 
 
 

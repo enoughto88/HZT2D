@@ -13,7 +13,6 @@ subroutine InitialField(Tele,phii,uele,vele)
 
    do j = 1,NY
       do i = 1,NX
-         !Tele(i,j) = 17.0d0*dexp(-60.0d0*(((dble(i)-0.5d0)*DXL-0.5d0*XL)/XL)**2.0d0)+3.0d0
          phii(i,j) = PHIA-PHIA*(((dble(i)-0.5d0)*DXL)/XL)
          uele(i,j) = 0.0d0
          vele(i,j) = 0.0d0
@@ -21,7 +20,7 @@ subroutine InitialField(Tele,phii,uele,vele)
    enddo
 
    if(INPUTF.eq.1) then
-      dname = '/program/'
+      dname = '/data/'
       open(16,file=trim(TOPDIR)//trim(dname)//'initialphite.dat',form='formatted',&
          status='old',action='read',position='rewind')
          do j = 1,NY
@@ -75,6 +74,7 @@ subroutine InitialField(Tele,phii,uele,vele)
    close(12)
    write(*,*) 'Wrote input.dat...'
 
+
    return
 endsubroutine
 
@@ -119,7 +119,7 @@ subroutine InputParticle(nm,pic,nneu,nele)
          pic(m,11)  = (pic(m,2)-DYL*(pic(m,9)-1.0d0))/DYL
       enddo
    else if(INPUTP.eq.1) then
-      dname = '/program/'
+      dname = '/data/'
       open(16,file=trim(TOPDIR)//trim(dname)//'initialpic.dat',form='formatted',&
          status='old',action='read',position='rewind')
          do m = 1,NMAX
@@ -163,7 +163,7 @@ subroutine InputMagneticField(babs,bfnd)
 
 
    if(INPUTM.eq.1) then
-      dname = '/program/'
+      dname = '/data/'
       open(18,file=trim(TOPDIR)//trim(dname)//'SPT100MF.dat',form='formatted',&
          status='old',action='read',position='rewind')
          do j = 1,NY
