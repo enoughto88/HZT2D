@@ -9,7 +9,7 @@ module parameters_mod
    !Program parameter
    character(len=80)           :: TOPDIR    = '/home/kawashima/HZT2D'
    integer         ,parameter  :: ITM       = 100000                    ![-] Maximum number of time steps
-   integer         ,parameter  :: ISMP      = 10                        ![-] Sampling interval of distribution
+   integer         ,parameter  :: ISMP      = 50                        ![-] Sampling interval of distribution
    integer         ,parameter  :: PSMP      = ITM                       ![-] Sampling interval of particles
    double precision,parameter  :: UPS       = 1.0d-6                    ![-] Truncation error
    !Physical parameter
