@@ -1,4 +1,3 @@
-#Arrangement of output directory
 rm -r output
 mkdir output
 cd output

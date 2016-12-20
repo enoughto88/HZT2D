@@ -1,0 +1,156 @@
+\documentclass[a4paper]{PRseminar}
+%\usepackage{txfonts}
+\usepackage{color}
+
+\title{PR Seminar}
+
+\author{D3 Rei Kawashima}
+
+\inst{}
+\abst{}
+\setlength{\topmargin}{-10.0truemm}
+\addtolength{\textheight}{0truemm}
+\setlength{\oddsidemargin}{-13truemm}
+\setlength{\evensidemargin}{-13truemm}
+\addtolength{\textwidth}{30truemm}
+\begin{document}
+%\maketitle
+	
+
+
+\section{Linear expression of HES}
+	\begin{equation}
+		\Delta Q+\Delta tA\left(\frac{\partial Q}{\partial x}\right)+\Delta tB\left(\frac{\partial Q}{\partial y}\right)=0
+	\end{equation}
+	\begin{equation}
+		Q=\left(\phi,u,v\right)^T,
+		\hspace{20pt}
+		A=\left(\begin{array}{ccc}
+			\  & 1 & \ \\
+			1  & \ & \ \\
+			\  & \ & \ \\
+		\end{array}\right),
+		\hspace{20pt}
+		B=\left(\begin{array}{ccc}
+			\  & \ & 1 \\
+			\ & \  & \ \\
+			1 & \ &\ \\
+		\end{array}\right).
+	\end{equation}
+	
+\subsection{First-order discretization}
+	\begin{equation}
+		\Delta t\left(\frac{\partial E}{\partial x}\right)=
+		\left(\begin{array}{c}
+			\sum_{i-1}^{i+1}\left(a_k\phi_k+b_ku_k\right)  \\
+			\sum_{i-1}^{i+1}\left(c_k\phi_k+d_ku_k\right)  \\
+			0 \\
+		\end{array}\right),
+		\hspace{20pt}
+		\Delta t\left(\frac{\partial F}{\partial x}\right)=
+		\left(\begin{array}{c}
+			\sum_{j-1}^{j+1}\left(e_k\phi_k+f_kv_k\right)  \\
+			0\\
+			\sum_{j-1}^{j+1}\left(g_k\phi_k+h_kv_k\right)  \\
+		\end{array}\right).
+	\end{equation}
+	\begin{align}
+		a_{i-1} =-   \frac{\Delta t}{2\Delta x}\hspace{20mm}
+		a_{i  }&=\ \ \frac{\Delta t}{ \Delta x}\hspace{20mm}
+		a_{i+1} =-   \frac{\Delta t}{2\Delta x}\\
+		b_{i-1} =-   \frac{\Delta t}{2\Delta x}\hspace{20mm}
+		b_{i  }&=\ \ 0                         \hspace{25mm}
+		b_{i+1} =\ \ \frac{\Delta t}{2\Delta x}
+	\end{align}
+	\begin{align}
+		c_{i-1} =-   \frac{\Delta t}{2\Delta x}\hspace{20mm}
+		c_{i  }&=\ \ 0                         \hspace{25mm}
+		c_{i+1} =\ \ \frac{\Delta t}{2\Delta x}\\
+		d_{i-1} =-   \frac{\Delta t}{2\Delta x}\hspace{20mm}
+		d_{i  }&=\ \ \frac{\Delta t}{ \Delta x}\hspace{20mm}
+		d_{i+1} =-   \frac{\Delta t}{2\Delta x}
+	\end{align}
+	\begin{align}
+		e_{j-1} =-   \frac{\Delta t}{2\Delta y}\hspace{20mm}
+		e_{j  }&=\ \ \frac{\Delta t}{ \Delta y}\hspace{20mm}
+		e_{j+1} =-   \frac{\Delta t}{2\Delta y}\\
+		f_{j-1} =-   \frac{\Delta t}{2\Delta y}\hspace{20mm}
+		f_{j  }&=\ \ 0                         \hspace{25mm}
+		f_{j+1} =\ \ \frac{\Delta t}{2\Delta y}
+	\end{align}
+	\begin{align}
+		g_{j-1} =-   \frac{\Delta t}{2\Delta y}\hspace{20mm}
+		g_{j  }&=\ \ 0                         \hspace{25mm}
+		g_{j+1} =\ \ \frac{\Delta t}{2\Delta y}\\
+		h_{j-1} =-   \frac{\Delta t}{2\Delta y}\hspace{20mm}
+		h_{j  }&=\ \ \frac{\Delta t}{ \Delta y}\hspace{20mm}
+		h_{j+1} =-   \frac{\Delta t}{2\Delta y}
+	\end{align}
+
+	\clearpage
+\subsection{Second-order discretization}
+	\begin{equation}
+		\Delta t\left(\frac{\partial E}{\partial x}\right)=
+		\left(\begin{array}{c}
+			\sum_{i-2}^{i+2}\left(a_k\phi_k+b_ku_k\right)  \\
+			\sum_{i-2}^{i+2}\left(c_k\phi_k+d_ku_k\right)  \\
+			0 \\
+		\end{array}\right),
+		\hspace{20pt}
+		\Delta t\left(\frac{\partial F}{\partial x}\right)=
+		\left(\begin{array}{c}
+			\sum_{j-2}^{j+2}\left(e_k\phi_k+f_kv_k\right)  \\
+			0\\
+			\sum_{j-2}^{j+2}\left(g_k\phi_k+h_kv_k\right)  \\
+		\end{array}\right).
+	\end{equation}
+	\begin{align}
+		a_{i-2}&=\ \ \frac{\Delta t}{4\Delta x}s_{\phi1,i-1}\nonumber\\
+		a_{i-1}&=-   \frac{\Delta t}{4\Delta x}\left(2+s_{\phi1,i-1}-s_{\phi2,i-1}\right)\nonumber\\
+		a_{i  }&=\ \ \frac{\Delta t}{4\Delta x}\left(4-s_{\phi1,i+1}-s_{\phi2,i-1}\right)       \\
+		a_{i+1}&=-   \frac{\Delta t}{4\Delta x}\left(2-s_{\phi1,i+1}+s_{\phi2,i+1}\right)\nonumber\\
+		a_{i+2}&=\ \ \frac{\Delta t}{4\Delta x}s_{\phi2,i+1}\nonumber\\\\
+		b_{i-2}&=\ \ \frac{\Delta t}{4\Delta x}s_{u1,i-1}\nonumber\\
+		b_{i-1}&=-   \frac{\Delta t}{4\Delta x}\left(2+s_{u1,i-1}-s_{u2,i-1}+2s_{u1,i}\right)\nonumber\\
+		b_{i  }&=\ \ \frac{\Delta t}{4\Delta x}\left(-s_{u2,i-1}+2s_{u1,i}-2s_{u2,i}+s_{u1,i+1}\right)       \\
+		b_{i+1}&=\ \ \frac{\Delta t}{4\Delta x}\left(2-s_{u1,i+1}+s_{u2,i+1}+2s_{u2,i}\right)\nonumber\\
+		b_{i+2}&=-   \frac{\Delta t}{4\Delta x}s_{u2,i+1}\nonumber
+	\end{align}
+	\clearpage
+	\begin{align}
+		c_{i-2}&=\ \ \frac{\Delta t}{4\Delta x}s_{\phi1,i-1}\nonumber\\
+		c_{i-1}&=-   \frac{\Delta t}{4\Delta x}\left(2+s_{\phi1,i-1}-s_{\phi2,i-1}+2s_{\phi1,i}\right)\nonumber\\
+		c_{i  }&=\ \ \frac{\Delta t}{4\Delta x}\left(-s_{\phi2,i-1}+2s_{\phi1,i}-2s_{\phi2,i}+s_{\phi1,i+1}\right)       \\
+		c_{i+1}&=\ \ \frac{\Delta t}{4\Delta x}\left(2-s_{\phi1,i+1}+s_{\phi2,i+1}+2s_{\phi2,i}\right)\nonumber\\
+		c_{i+2}&=-   \frac{\Delta t}{4\Delta x}s_{\phi2,i+1}\nonumber\\\\
+		d_{i-2}&=\ \ \frac{\Delta t}{4\Delta x}s_{u1,i-1}\nonumber\\
+		d_{i-1}&=-   \frac{\Delta t}{4\Delta x}\left(2+s_{u1,i-1}-s_{u2,i-1}\right)\nonumber\\
+		d_{i  }&=\ \ \frac{\Delta t}{4\Delta x}\left(4-s_{u1,i+1}-s_{u2,i-1}\right)       \\
+		d_{i+1}&=-   \frac{\Delta t}{4\Delta x}\left(2-s_{u1,i+1}+s_{u2,i+1}\right)\nonumber\\
+		d_{i+2}&=\ \ \frac{\Delta t}{4\Delta x}s_{u2,i+1}\nonumber\\\\
+		e_{j-2}&=\ \ \frac{\Delta t}{4\Delta y}t_{\phi1,j-1}\nonumber\\
+		e_{j-1}&=-   \frac{\Delta t}{4\Delta y}\left(2+t_{\phi1,j-1}-t_{\phi2,j-1}\right)\nonumber\\
+		e_{j  }&=\ \ \frac{\Delta t}{4\Delta y}\left(4-t_{\phi1,j+1}-t_{\phi2,j-1}\right)       \\
+		e_{j+1}&=-   \frac{\Delta t}{4\Delta y}\left(2-t_{\phi1,j+1}+t_{\phi2,j+1}\right)\nonumber\\
+		e_{j+2}&=\ \ \frac{\Delta t}{4\Delta y}t_{\phi2,j+1}\nonumber\\
+	\end{align}
+	\clearpage
+	\begin{align}
+		f_{j-2}&=\ \ \frac{\Delta t}{4\Delta y}t_{v1,j-1}\nonumber\\
+		f_{j-1}&=-   \frac{\Delta t}{4\Delta y}\left(2+t_{v1,j-1}-t_{v2,j-1}+2t_{v1,j}\right)\nonumber\\
+		f_{j  }&=\ \ \frac{\Delta t}{4\Delta y}\left(-t_{v2,j-1}+2t_{v1,j}-2t_{v2,j}+t_{v1,j+1}\right)       \\
+		f_{j+1}&=\ \ \frac{\Delta t}{4\Delta y}\left(2-t_{v1,j+1}+t_{v2,j+1}+2t_{v2,j}\right)\nonumber\\
+		f_{j+2}&=-   \frac{\Delta t}{4\Delta y}t_{v2,j+1}\nonumber \\\\
+		g_{j-2}&=\ \ \frac{\Delta t}{4\Delta y}t_{\phi1,j-1}\nonumber\\
+		g_{j-1}&=-   \frac{\Delta t}{4\Delta y}\left(2+t_{\phi1,j-1}-t_{\phi2,j-1}+2t_{\phi1,j}\right)\nonumber\\
+		g_{j  }&=\ \ \frac{\Delta t}{4\Delta y}\left(-t_{\phi2,j-1}+2t_{\phi1,j}-2t_{\phi2,j}+t_{\phi1,j+1}\right)       \\
+		g_{j+1}&=\ \ \frac{\Delta t}{4\Delta y}\left(2-t_{\phi1,j+1}+t_{\phi2,j+1}+2t_{\phi2,j}\right)\nonumber\\
+		g_{j+2}&=-   \frac{\Delta t}{4\Delta y}t_{\phi2,j+1}\nonumber\\\\
+		h_{j-2}&=\ \ \frac{\Delta t}{4\Delta y}t_{v1,j-1}\nonumber\\
+		h_{j-1}&=-   \frac{\Delta t}{4\Delta y}\left(2+t_{v1,j-1}-t_{v2,j-1}\right)\nonumber\\
+		h_{j  }&=\ \ \frac{\Delta t}{4\Delta y}\left(4-t_{v1,j+1}-t_{v2,j-1}\right)       \\
+		h_{j+1}&=-   \frac{\Delta t}{4\Delta y}\left(2-t_{v1,j+1}+t_{v2,j+1}\right)\nonumber\\
+		h_{j+2}&=\ \ \frac{\Delta t}{4\Delta y}t_{v2,j+1}\nonumber
+	\end{align}
+\end{document}
+
