@@ -14,7 +14,7 @@ dirout = '/Users/kawashima/Dropbox/HZT2D/figure/distribution/';
 fname1 = 'distribution';
 %Average the data of fileini ~ fileend
 fileini = 1;
-fileend = 2000;
+fileend = 1000;
 aveini  = 6;
 aveend  = 8;
 dtpic   = 1.0e-8;

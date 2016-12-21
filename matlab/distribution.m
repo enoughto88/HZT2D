@@ -13,8 +13,8 @@ dirin  = '/Users/kawashima/Dropbox/HZT2D/output/distribution/';
 dirout = '/Users/kawashima/Dropbox/HZT2D/figure/distribution/';
 fname1 = 'distribution';
 %Average the data of fileini ~ fileend
-fileini = 1804;
-fileend = 1805;
+fileini = 100;
+fileend = 500;
 dtpic   = 1.0e-8;
 ismp    = 50;
 %Grid parameter
@@ -28,8 +28,8 @@ outTele = 1;
 outphii = 1;
 outqion = 1;
 outdist = 0;
-outuele = 1;
-outflow = 1;
+outuele = 0;
+outflow = 0;
 maxnion = 1e20;
 %----------------------------------
 
@@ -187,9 +187,9 @@ h = colorbar;
 ylabel(h,'Ion number density, 10^{18} m^{-3}','FontSize',16)
 shading interp
 colormap('jet')
-caxis([0 17])
-set(h,'YTick',[0 5 10 15 20])
-set(h,'YTickLabel',{'0','5','10','15','20'})
+caxis([0 8])
+set(h,'YTick',[0 2 4 6 8])
+set(h,'YTickLabel',{'0.0','2.0','4.0','6.0','8.0'})
 hold on
 %plot([23 23], [0 YL], 'w--')
 set(gca, 'XLim', [0,XL]);
@@ -240,7 +240,7 @@ h = colorbar;
 ylabel(h,'Space potential, V','FontSize',16)
 shading interp
 colormap('jet')
-caxis([0 max(max(phii))])
+caxis([0 300])
 %hold on
 %plot([23 23], [0 YL], 'w--')
 set(h,'YTick',[0 100 200 300])
