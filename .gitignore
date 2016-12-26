@@ -1,6 +1,7 @@
-# ignore all output files
+# ignore all output, figure, and matlab files
 output/
 figure/
+matlab/
 
 # ignore all .DS_Store files in the children directories
 */.DS_Store

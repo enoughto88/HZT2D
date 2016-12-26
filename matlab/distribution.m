@@ -13,8 +13,8 @@ dirin  = '/Users/kawashima/Dropbox/HZT2D/output/distribution/';
 dirout = '/Users/kawashima/Dropbox/HZT2D/figure/distribution/';
 fname1 = 'distribution';
 %Average the data of fileini ~ fileend
-fileini = 100;
-fileend = 500;
+fileini = 1;
+fileend = 2000;
 dtpic   = 1.0e-8;
 ismp    = 50;
 %Grid parameter
@@ -24,15 +24,19 @@ XL = 50;
 YL = 360;
 outnneu = 1;
 outnion = 1;
-outTele = 1;
+outTele = 0;
 outphii = 1;
-outqion = 1;
+outqion = 0;
 outdist = 0;
 outuele = 0;
 outflow = 0;
-maxnion = 1e20;
+nionrange(1) = 0.0; nionrange(2) = 1.2;
+nionInterval = 0.2; 
+nionOrder    = 1e19;
 %----------------------------------
 
+nionTick = nionrange(1):nionInterval:nionrange(2);
+IntnionTick = num2str(nionTick','%2.1f\n');
 
 dx = XL/(nx-1);
 dy = YL/(ny-1);
@@ -152,44 +156,17 @@ end
 
 if outnion == 1
 set(gcf, 'PaperPosition', [2 1 5.85 5.2]);
-logne = log10(nion);
-logne(:,:) = min(logne(:,:),19);
-[c,h]=contourf(xx,yy,logne,100);
+[c,h]=contourf(xx,yy,nion/nionOrder,100);
 set(h,'edgecolor','none')
 grid off
 h = colorbar;
 %ylabel(h,'\phi / \phi_{Anode}','FontSize',16)
-ylabel(h,'log_{10} (n_e)','FontSize',16)
-shading flat
-colormap('jet')
-caxis([16 max(max(logne))])
-set(h,'YTick',[16 17 18 19 20])
-set(h,'YTickLabel',{'16','17','18','19','20'})
-hold on
-%plot([23 23], [0 YL], 'w--')
-set(gca, 'XLim', [0,XL]);
-set(gca, 'YLim', [0,360]);
-set(gca,'XTick',[0 10 20 30 40 50])
-set(gca,'XTickLabel',{'0','10','20','30','40','50'})
-set(gca,'YTick',[0 90 180 270 360])
-set(gca,'YTickLabel',{'0','90','180','270','360'})
-xlabel('Axial position, mm','FontSize',16)
-ylabel('Azimuthal position, deg','FontSize',16)
-saveas(figure(1),strcat(dirout,'logne.png'));
-hold off
-nion(:,:) = min(nion(:,:),maxnion);
-set(gcf, 'PaperPosition', [2 1 5.85 5.2]);
-[c,h]=contourf(xx,yy,nion/1e18,100);
-set(h,'edgecolor','none')
-grid off
-h = colorbar;
-%ylabel(h,'\phi / \phi_{Anode}','FontSize',16)
-ylabel(h,'Ion number density, 10^{18} m^{-3}','FontSize',16)
+ylabel(h,'Ion number density, 10^{19} m^{-3}','FontSize',16)
 shading interp
 colormap('jet')
-caxis([0 8])
-set(h,'YTick',[0 2 4 6 8])
-set(h,'YTickLabel',{'0.0','2.0','4.0','6.0','8.0'})
+caxis(nionrange)
+set(h,'YTick',nionTick)
+set(h,'YTickLabel',IntnionTick)
 hold on
 %plot([23 23], [0 YL], 'w--')
 set(gca, 'XLim', [0,XL]);

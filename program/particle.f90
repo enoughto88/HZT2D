@@ -142,7 +142,7 @@ subroutine InflowParticle_Differential(nm,pic)
       pic(nm,5)  = cc*dcos(dd)
       pic(nm,1)  = grnd()*DTPIC*pic(nm,3)
       pic(nm,2)  = YL*grnd()
-      pic(nm,6)  = psiz*(1.0d0-0.5d0*dcos(2.0d0*2.0d0*PI*pic(nm,2)/YL))
+      pic(nm,6)  = psiz*(1.0d0-1.0d0*dcos(2.0d0*2.0d0*PI*pic(nm,2)/YL))
       pic(nm,7)  = 0.0d0
       pic(nm,8)  = dble(1+int(pic(nm,1)/DXL))
       pic(nm,9)  = dble(1+int(pic(nm,2)/DYL))
