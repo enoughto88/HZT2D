@@ -1,8 +1,8 @@
 !***********************************************************************
-!***** particle.f90: 2D3V PIC solver                               *****
-!***** Main input : ph,qion                                        *****
-!***** Calculate motion of heavy particles: nm,pic                 *****
-!***** Main output: nn,ne,fwx,fwy                                  *****
+!*****      particle.f90: 2D3V PIC solver                          *****
+!*****      Main input : efnd,bfnd,qion                            *****
+!*****      Calculate motion of heavy particles: nm,pic            *****
+!*****      Main output: nneu,nele                                 *****
 !***********************************************************************
 
 subroutine Particle2D3V(nm,pic,efnd,bfnd,qion,nneu,nele,time_pic)
@@ -15,15 +15,15 @@ subroutine Particle2D3V(nm,pic,efnd,bfnd,qion,nneu,nele,time_pic)
    integer :: i,j
    integer :: time_pre,time_post,time_pic
    integer                                    ,intent(inout)    :: nm         !Number of particles
-   double precision,dimension(NPMAX,11)       ,intent(inout)    :: pic        !Particle information
+   double precision,dimension(1:NPMAX,11)     ,intent(inout)    :: pic        !Particle information
    double precision,dimension(1:NXMAX,1:NYMAX),intent(in)       :: qion       ![m-3s-1] Electron production rate
    double precision,dimension(1:NXMAX,1:NYMAX),intent(out)      :: nneu       ![m-3] Neutral number density
    double precision,dimension(1:NXMAX,1:NYMAX),intent(out)      :: nele       ![m-3] Electron number density
    double precision,dimension(1:NXMAX+1,1:NYMAX+1,2),intent(in) :: efnd       ![Vm-1] Electric field defined at nodes
    double precision,dimension(1:NXMAX+1,1:NYMAX+1),intent(in)   :: bfnd       ![T] Radial magnetic flux density defined as nodes
-   double precision,dimension(NPMAX,2)                     :: efp
-   double precision,dimension(NPMAX)                       :: bfp
-   double precision,dimension(NPMAX,5)                     :: post
+   double precision,dimension(1:NPMAX,2)                        :: efp
+   double precision,dimension(1:NPMAX)                          :: bfp
+   double precision,dimension(1:NPMAX,5)                        :: post
 
 
    call system_clock(count = time_pre)
@@ -446,12 +446,12 @@ subroutine Leapfrog_Particle(nm,pic,efp,bfp,post)
    use global_mod
    !$ use omp_lib
    implicit none
-   integer                            ,intent(in)  :: nm
+   integer                             ,intent(in)  :: nm
    double precision,dimension(NPMAX,11),intent(in)  :: pic
    double precision,dimension(NPMAX,2) ,intent(in)  :: efp
    double precision,dimension(NPMAX)   ,intent(in)  :: bfp
    double precision,dimension(NPMAX,5) ,intent(out) :: post
-   integer                                         :: m
+   integer                                          :: m
 
    !$omp parallel default(none),shared(nm,pic,efp,bfp,post),private(m)
    !$omp do
@@ -551,14 +551,10 @@ subroutine Density(nm,pic,nneu,nele)
       enddo
    enddo
    do j = 1,NYMAX+1
-      nabdn(1,j)    = 2.0d0*nabdn(1,j)
-      nabdi(1,j)    = 2.0d0*nabdi(1,j)
+      nabdn(1      ,j)    = 2.0d0*nabdn(1,j)
+      nabdi(1      ,j)    = 2.0d0*nabdi(1,j)
       nabdn(NXMAX+1,j) = 2.0d0*nabdn(NXMAX+1,j)
       nabdi(NXMAX+1,j) = 2.0d0*nabdi(NXMAX+1,j)
-      !nabdn(1,j)    = nabdn(2,j)
-      !nabdi(1,j)    = nabdi(2,j)
-      !nabdn(NXMAX+1,j) = nabdn(NXMAX,j)
-      !nabdi(NXMAX+1,j) = nabdi(NXMAX,j)
    enddo
 
    !$omp parallel default(none),shared(nandn,nacln,nneu,nandi,nacli,nele),private(i,j)
@@ -567,8 +563,8 @@ subroutine Density(nm,pic,nneu,nele)
       do i = 1,NXMAX
          nacln(i,j) = 0.25d0*(nabdn(i,j)+nabdn(i+1,j)+nabdn(i,j+1)+nabdn(i+1,j+1))
          nacli(i,j) = 0.25d0*(nabdi(i,j)+nabdi(i+1,j)+nabdi(i,j+1)+nabdi(i+1,j+1))
-         nneu(i,j) = nacln(i,j)/DXL/DYL/ZL
-         nele(i,j) = dmax1(nacli(i,j)/DXL/DYL/ZL,NEMIN)
+         nneu(i,j)  = nacln(i,j)/DXL/DYL/ZL
+         nele(i,j)  = dmax1(nacli(i,j)/DXL/DYL/ZL,NEMIN)
       enddo
    enddo
    !$omp end do
