@@ -8,19 +8,17 @@ program main
    use parameters_mod
    use global_mod
    implicit none
-   character(len=6)  :: cname
-   character(len=30) :: dname
-   integer :: nx,ny,m,lpele
+   integer :: m,lpele
    integer :: time_pic,time_ele
    double precision,dimension(1:NXMAX,1:NYMAX)     :: nele              ![m-3]  Electron number density
    double precision,dimension(1:NXMAX,1:NYMAX)     :: nneu              ![m-3]  Neutral number density
-   double precision,dimension(1:NXMAX,1:NYMAX)     :: Tele              ![eV]   Electron temperature
    double precision,dimension(1:NXMAX,1:NYMAX)     :: fcol              ![s-1]  Total collision frequency
    double precision,dimension(1:NXMAX,1:NYMAX)     :: fion              ![s-1]  Ionization collision frequency
    double precision,dimension(1:NXMAX,1:NYMAX)     :: qion              ![m-3s-1] Ion production rate
    double precision,dimension(1:NXMAX,1:NYMAX)     :: phii              ![V]    Space potential
    double precision,dimension(1:NXMAX,1:NYMAX)     :: uele              ![ms-1] x-Velocity
    double precision,dimension(1:NXMAX,1:NYMAX)     :: vele              ![ms-1] y-Velocity
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: Tele              ![eV]   Electron temperature
    double precision,dimension(1:NXMAX,1:NYMAX)     :: babs              ![T] Radial magnetic flux density
    double precision,dimension(1:NXMAX,1:NYMAX)     :: Omee              ![-] Electron Hall parameter
    double precision,dimension(1:NXMAX,1:NYMAX)     :: cond              ![-] Electron conductivity
@@ -28,8 +26,8 @@ program main
    double precision,dimension(3)                   :: cfl  = 0.0d0
    double precision,dimension(1:NXMAX+1,1:NYMAX+1,2) :: efnd            ![Vm-1] Electric field defined at nodes
    double precision,dimension(1:NXMAX+1,1:NYMAX+1)   :: bfnd            ![T] Radial magnetic flux density defined as nodes
-   integer                                   :: nm                      !N. of particles
-   double precision,dimension(NPMAX,11)       :: pic                     !Particle information
+   integer                                    :: nm                    !N. of particles
+   double precision,dimension(NPMAX,11)       :: pic                    !Particle information
    double precision :: vxmax,vymax
    integer :: nmi,nmn
 
@@ -91,6 +89,7 @@ contains
 !--------------- Linux console output for monitoring -------------------
 
    subroutine OutputDisplay
+      implicit none
 
 
       if(mod(it,ISMP).eq.0) then
@@ -130,6 +129,10 @@ contains
 !----------------- File output for numerical results -------------------
 
    subroutine OutputFile
+      implicit none
+      character(len=6)  :: cname
+      character(len=30) :: dname
+      integer :: nx,ny
 
       if(mod(it,ISMP).eq.0) then
          write(cname,'(I6.6)') nstp
@@ -139,7 +142,9 @@ contains
             do ny = 1,NYMAX
                do nx = 1,NXMAX
                   write(22,'(7E15.5)') &
-                     nneu_ave(nx,ny),nele_ave(nx,ny),Tele(nx,ny),phii_ave(nx,ny),qion_ave(nx,ny),uele_ave(nx,ny),vele_ave(nx,ny)
+                     nneu_ave(nx,ny),nele_ave(nx,ny),Tele(nx,ny),&
+                     phii_ave(nx,ny),qion_ave(nx,ny),uele_ave(nx,ny),&
+                     vele_ave(nx,ny)
                enddo
             enddo
          close(22)

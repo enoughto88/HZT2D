@@ -1,4 +1,7 @@
-!------------------- 1D Vector Solver ----------------------------------
+!***********************************************************************
+!*****    Electron Fluid Solver Using Hyperbolic System Approach   *****
+!*****          Developed by Rei Kawashima (Univ. of Tokyo)        *****
+!***********************************************************************
 
 subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpele,time_ele)
 
@@ -11,16 +14,15 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
    double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: phii
    double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: uele
    double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: vele
-   double precision,dimension(1:NXMAX,1:NYMAX)    :: Omee                     ![-] Electron Hall parameter
-   double precision,dimension(1:NXMAX,1:NYMAX)    :: cond                     ![-] Electron conductivity
-   double precision,dimension(-1:NXMAX+2,-1:NYMAX+2,3)       :: var           !Ghost cell is used for y-boundary
+   double precision,dimension(1:NXMAX,1:NYMAX)    :: Omee               ![-] Electron Hall parameter
+   double precision,dimension(1:NXMAX,1:NYMAX)    :: cond               ![-] Electron conductivity
+   double precision,dimension(-1:NXMAX+2,-1:NYMAX+2,3)       :: var     !Ghost cell is used for y-boundary
    double precision,dimension(3)             :: cfl                     !1:x-direction,2:y-direction,3:source
    double precision,dimension(3)             :: resn
    double precision,dimension(1:NXMAX,1:NYMAX,3)   :: rhs
    double precision,dimension(1:NXMAX,1:NYMAX,3)   :: delta
    double precision,dimension(1:NXMAX,1:NYMAX,3)   :: sce
    double precision,dimension(1:NXMAX,1:NYMAX,4)   :: ss
-   double precision,dimension(1:NXMAX,1:NYMAX,5)   :: aa2,bb2,cc2,dd2,ee2,ff2,gg2,hh2
    double precision,dimension(1:NXMAX,1:NYMAX,3)   :: aa1,bb1,cc1,dd1,ee1,ff1,gg1,hh1
    double precision :: maxpot,minpot
 
@@ -41,107 +43,69 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
       do lpele = 1,50000
          !Dirichlet Boundary condition
          do ny = 1,NYMAX
-            var(0   ,ny,1)    = 2.0d0*(-PHIA)       -var(1 ,ny,1)
-            var(-1  ,ny,1)    = 2.0d0*var(0,ny,1)    -var(1 ,ny,1)
-            var(NXMAX+1,ny,1) = 2.0d0*(-PHIC)       -var(NXMAX,ny,1)
+            var(0      ,ny,1) = 2.0d0*(-PHIA)           -var(1 ,ny,1)
+            var(-1     ,ny,1) = 2.0d0*var(0,ny,1)       -var(1 ,ny,1)
+            var(NXMAX+1,ny,1) = 2.0d0*(-PHIC)           -var(NXMAX,ny,1)
             var(NXMAX+2,ny,1) = 2.0d0*var(NXMAX+1,ny,1) -var(NXMAX,ny,1)
          enddo
          !Neumann Boundary condition
          do ny = 1,NYMAX
-            var(0   ,ny,2) = 2.0d0*var(1   ,ny,2)-var(2   ,ny,2)
-            var(-1  ,ny,2) = 2.0d0*var(0   ,ny,2)-var(1   ,ny,2)
+            var(0      ,ny,2) = 2.0d0*var(1   ,ny,2)-var(2   ,ny,2)
+            var(-1     ,ny,2) = 2.0d0*var(0   ,ny,2)-var(1   ,ny,2)
             var(NXMAX+1,ny,2) = 2.0d0*var(NXMAX  ,ny,2)-var(NXMAX-1,ny,2)
             var(NXMAX+2,ny,2) = 2.0d0*var(NXMAX+1,ny,2)-var(NXMAX  ,ny,2)
          enddo
          !Periodic Boundary condition
          do nx = 1,NXMAX
-            var(nx,0   ,1) = var(nx,NYMAX  ,1)
-            var(nx,0   ,2) = var(nx,NYMAX  ,2)
-            var(nx,0   ,3) = var(nx,NYMAX  ,3)
-            var(nx,-1  ,1) = var(nx,NYMAX-1,1)
-            var(nx,-1  ,2) = var(nx,NYMAX-1,2)
-            var(nx,-1  ,3) = var(nx,NYMAX-1,3)
-            var(nx,NYMAX+1,1) = var(nx,1   ,1)
-            var(nx,NYMAX+1,2) = var(nx,1   ,2)
-            var(nx,NYMAX+1,3) = var(nx,1   ,3)
-            var(nx,NYMAX+2,1) = var(nx,2   ,1)
-            var(nx,NYMAX+2,2) = var(nx,2   ,2)
-            var(nx,NYMAX+2,3) = var(nx,2   ,3)
+            var(nx,0      ,1) = var(nx,NYMAX  ,1)
+            var(nx,0      ,2) = var(nx,NYMAX  ,2)
+            var(nx,0      ,3) = var(nx,NYMAX  ,3)
+            var(nx,-1     ,1) = var(nx,NYMAX-1,1)
+            var(nx,-1     ,2) = var(nx,NYMAX-1,2)
+            var(nx,-1     ,3) = var(nx,NYMAX-1,3)
+            var(nx,NYMAX+1,1) = var(nx,1      ,1)
+            var(nx,NYMAX+1,2) = var(nx,1      ,2)
+            var(nx,NYMAX+1,3) = var(nx,1      ,3)
+            var(nx,NYMAX+2,1) = var(nx,2      ,1)
+            var(nx,NYMAX+2,2) = var(nx,2      ,2)
+            var(nx,NYMAX+2,3) = var(nx,2      ,3)
          enddo
 
-         if(AORDER.eq.1) then
-            if(lpele.eq.1) then
-               call HESCoefficient1O2D_X(aa1,bb1,cc1,dd1)
-               call HESCoefficient1O2D_Y(ee1,ff1,gg1,hh1)
-            endif
-
-            !$omp parallel default(none),private(nx,ny),shared(DTELE,rhs,var,sce,aa1,bb1,cc1,dd1,ee1,ff1,gg1,hh1,ss)
-            !$omp do
-            do ny = 1,NYMAX
-               do nx = 1,NXMAX
-                  rhs(nx,ny,1) =-DTELE*(&
-                               aa1(nx,ny,1)*var(nx-1,ny  ,1)+aa1(nx,ny,2)*var(nx  ,ny  ,1)+aa1(nx,ny,3)*var(nx+1,ny  ,1)&
-                              +bb1(nx,ny,1)*var(nx-1,ny  ,2)+bb1(nx,ny,2)*var(nx  ,ny  ,2)+bb1(nx,ny,3)*var(nx+1,ny  ,2)&
-                              +ee1(nx,ny,1)*var(nx  ,ny-1,1)+ee1(nx,ny,2)*var(nx  ,ny  ,1)+ee1(nx,ny,3)*var(nx  ,ny+1,1)&
-                              +ff1(nx,ny,1)*var(nx  ,ny-1,3)+ff1(nx,ny,2)*var(nx  ,ny  ,3)+ff1(nx,ny,3)*var(nx  ,ny+1,3)&
-                              +sce(nx,ny,1))
-
-                  rhs(nx,ny,2) =-DTELE*(&
-                               cc1(nx,ny,1)*var(nx-1,ny  ,1)+cc1(nx,ny,2)*var(nx  ,ny  ,1)+cc1(nx,ny,3)*var(nx+1,ny  ,1)&
-                              +dd1(nx,ny,1)*var(nx-1,ny  ,2)+dd1(nx,ny,2)*var(nx  ,ny  ,2)+dd1(nx,ny,3)*var(nx+1,ny  ,2)&
-                              +ss(nx,ny,1)*var(nx,ny,2)&
-                              +ss(nx,ny,2)*var(nx,ny,3)&
-                              +sce(nx,ny,2))
-
-                  rhs(nx,ny,3) =-DTELE*(&
-                               gg1(nx,ny,1)*var(nx  ,ny-1,1)+gg1(nx,ny,2)*var(nx  ,ny  ,1)+gg1(nx,ny,3)*var(nx  ,ny+1,1)&
-                              +hh1(nx,ny,1)*var(nx  ,ny-1,3)+hh1(nx,ny,2)*var(nx  ,ny  ,3)+hh1(nx,ny,3)*var(nx  ,ny+1,3)&
-                              +ss(nx,ny,3)*var(nx,ny,2)&
-                              +ss(nx,ny,4)*var(nx,ny,3)&
-                              +sce(nx,ny,3))
-               enddo
-            enddo
-            !$omp end do
-            !$omp end parallel
-         elseif(AORDER.eq.2) then
-            if(lpele.eq.1) then
-               call HESCoefficient2D_X(var,aa2,bb2,cc2,dd2)
-               call HESCoefficient2D_Y(var,ee2,ff2,gg2,hh2)
-            endif
-            !$omp parallel default(none),private(nx,ny),shared(DTELE,rhs,var,sce,aa2,bb2,cc2,dd2,ee2,ff2,gg2,hh2,ss)
-            !$omp do
-            do ny = 1,NYMAX
-               do nx = 1,NXMAX
-                  rhs(nx,ny,1) =-DTELE*(&
-                               aa2(nx,ny,1)*var(nx-2,ny  ,1)+aa2(nx,ny,2)*var(nx-1,ny  ,1)+aa2(nx,ny,3)*var(nx  ,ny  ,1)+aa2(nx,ny,4)*var(nx+1,ny  ,1)+aa2(nx,ny,5)*var(nx+2,ny  ,1)&
-                              +bb2(nx,ny,1)*var(nx-2,ny  ,2)+bb2(nx,ny,2)*var(nx-1,ny  ,2)+bb2(nx,ny,3)*var(nx  ,ny  ,2)+bb2(nx,ny,4)*var(nx+1,ny  ,2)+bb2(nx,ny,5)*var(nx+2,ny  ,2)&
-                              +ee2(nx,ny,1)*var(nx  ,ny-2,1)+ee2(nx,ny,2)*var(nx  ,ny-1,1)+ee2(nx,ny,3)*var(nx  ,ny  ,1)+ee2(nx,ny,4)*var(nx  ,ny+1,1)+ee2(nx,ny,5)*var(nx  ,ny+2,1)&
-                              +ff2(nx,ny,1)*var(nx  ,ny-2,3)+ff2(nx,ny,2)*var(nx  ,ny-1,3)+ff2(nx,ny,3)*var(nx  ,ny  ,3)+ff2(nx,ny,4)*var(nx  ,ny+1,3)+ff2(nx,ny,5)*var(nx  ,ny+2,3)&
-                              +sce(nx,ny,1))
-
-                  rhs(nx,ny,2) =-DTELE*(&
-                               cc2(nx,ny,1)*var(nx-2,ny  ,1)+cc2(nx,ny,2)*var(nx-1,ny  ,1)+cc2(nx,ny,3)*var(nx  ,ny  ,1)+cc2(nx,ny,4)*var(nx+1,ny  ,1)+cc2(nx,ny,5)*var(nx+2,ny  ,1)&
-                              +dd2(nx,ny,1)*var(nx-2,ny  ,2)+dd2(nx,ny,2)*var(nx-1,ny  ,2)+dd2(nx,ny,3)*var(nx  ,ny  ,2)+dd2(nx,ny,4)*var(nx+1,ny  ,2)+dd2(nx,ny,5)*var(nx+2,ny  ,2)&
-                              +ss(nx,ny,1)*var(nx,ny,2)&
-                              +ss(nx,ny,2)*var(nx,ny,3)&
-                              +sce(nx,ny,2))
-
-                  rhs(nx,ny,3) =-DTELE*(&
-                               gg2(nx,ny,1)*var(nx  ,ny-2,1)+gg2(nx,ny,2)*var(nx  ,ny-1,1)+gg2(nx,ny,3)*var(nx  ,ny  ,1)+gg2(nx,ny,4)*var(nx  ,ny+1,1)+gg2(nx,ny,5)*var(nx  ,ny+2,1)&
-                              +hh2(nx,ny,1)*var(nx  ,ny-2,3)+hh2(nx,ny,2)*var(nx  ,ny-1,3)+hh2(nx,ny,3)*var(nx  ,ny  ,3)+hh2(nx,ny,4)*var(nx  ,ny+1,3)+hh2(nx,ny,5)*var(nx  ,ny+2,3)&
-                              +ss(nx,ny,3)*var(nx,ny,2)&
-                              +ss(nx,ny,4)*var(nx,ny,3)&
-                              +sce(nx,ny,3))
-               enddo
-            enddo
-            !$omp end do
-            !$omp end parallel
-         else
-            write(*,*) 'Error in AORDER...',AORDER
-            stop
+         if(lpele.eq.1) then
+            call HESCoefficient1O2D_X(aa1,bb1,cc1,dd1)
+            call HESCoefficient1O2D_Y(ee1,ff1,gg1,hh1)
          endif
 
-         call LHSCALC(ss,rhs,delta)
+         !$omp parallel default(none),private(nx,ny),shared(DTELE,rhs,var,sce,aa1,bb1,cc1,dd1,ee1,ff1,gg1,hh1,ss)
+         !$omp do
+         do ny = 1,NYMAX
+            do nx = 1,NXMAX
+               rhs(nx,ny,1) =-DTELE*(&
+                            aa1(nx,ny,1)*var(nx-1,ny  ,1)+aa1(nx,ny,2)*var(nx  ,ny  ,1)+aa1(nx,ny,3)*var(nx+1,ny  ,1)&
+                           +bb1(nx,ny,1)*var(nx-1,ny  ,2)+bb1(nx,ny,2)*var(nx  ,ny  ,2)+bb1(nx,ny,3)*var(nx+1,ny  ,2)&
+                           +ee1(nx,ny,1)*var(nx  ,ny-1,1)+ee1(nx,ny,2)*var(nx  ,ny  ,1)+ee1(nx,ny,3)*var(nx  ,ny+1,1)&
+                           +ff1(nx,ny,1)*var(nx  ,ny-1,3)+ff1(nx,ny,2)*var(nx  ,ny  ,3)+ff1(nx,ny,3)*var(nx  ,ny+1,3)&
+                           +sce(nx,ny,1))
+
+               rhs(nx,ny,2) =-DTELE*(&
+                            cc1(nx,ny,1)*var(nx-1,ny  ,1)+cc1(nx,ny,2)*var(nx  ,ny  ,1)+cc1(nx,ny,3)*var(nx+1,ny  ,1)&
+                           +dd1(nx,ny,1)*var(nx-1,ny  ,2)+dd1(nx,ny,2)*var(nx  ,ny  ,2)+dd1(nx,ny,3)*var(nx+1,ny  ,2)&
+                           +ss(nx,ny,1)*var(nx,ny,2)&
+                           +ss(nx,ny,2)*var(nx,ny,3)&
+                           +sce(nx,ny,2))
+
+               rhs(nx,ny,3) =-DTELE*(&
+                            gg1(nx,ny,1)*var(nx  ,ny-1,1)+gg1(nx,ny,2)*var(nx  ,ny  ,1)+gg1(nx,ny,3)*var(nx  ,ny+1,1)&
+                           +hh1(nx,ny,1)*var(nx  ,ny-1,3)+hh1(nx,ny,2)*var(nx  ,ny  ,3)+hh1(nx,ny,3)*var(nx  ,ny+1,3)&
+                           +ss(nx,ny,3)*var(nx,ny,2)&
+                           +ss(nx,ny,4)*var(nx,ny,3)&
+                           +sce(nx,ny,3))
+            enddo
+         enddo
+         !$omp end do
+         !$omp end parallel
+
+         call LHSCALC(rhs,delta)
          call CFL_SCE(ss,cfl)
 
          DTELE = SETCFL/dmax1(cfl(1),cfl(2),cfl(3))*DTELE
@@ -162,8 +126,8 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
          do ny = 1,NYMAX
             do nx = 1,NXMAX
                resn(1) = resn(1)+(dabs(delta(nx,ny,1))/(dabs(var(nx,ny,1))+1.0d-2))**2.0d0
-               resn(2) = resn(2)+(dabs(delta(nx,ny,2))/(dabs(var(nx,ny,2))+1.0d16*1.0d3/NESTAR))**2.0d0
-               resn(3) = resn(3)+(dabs(delta(nx,ny,3))/(dabs(var(nx,ny,3))+1.0d16*1.0d3/NESTAR))**2.0d0
+               resn(2) = resn(2)+(dabs(delta(nx,ny,2))/(dabs(var(nx,ny,2))+1.0d-2))**2.0d0
+               resn(3) = resn(3)+(dabs(delta(nx,ny,3))/(dabs(var(nx,ny,3))+1.0d-2))**2.0d0
             enddo
          enddo
          do k = 1,3

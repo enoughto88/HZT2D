@@ -48,7 +48,6 @@ module parameters_mod
    integer         ,parameter  :: CALPIC    = 1
    integer         ,parameter  :: CALELE    = 1
    double precision,parameter  :: NESTAR    = 1.0d21
-   integer         ,parameter  :: AORDER    = 1
 
 end module parameters_mod
 

@@ -1,16 +1,13 @@
 !-------------------Calculation of Right Hand Side----------------------
 
-subroutine LHSCALC(mag,rhs,delta)
+subroutine LHSCALC(rhs,delta)
 
    use parameters_mod
    use global_mod
    implicit none
-   double precision,dimension(1:NXMAX,1:NYMAX,4)              :: mag
    double precision,dimension(1:NXMAX,1:NYMAX,3)              :: rhs
    double precision,dimension(1:NXMAX,1:NYMAX,3)              :: delta
-   !double precision,dimension(1:NXMAX,1:NYMAX,3)              :: delta1
 
-   if(AORDER.eq.0) mag=0.0d0
    !Implicit treatment of source term
    !call EXPLICIT(rhs,delta)
    !call SOURCEIMP(mag,rhs,delta1)
