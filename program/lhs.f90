@@ -5,10 +5,10 @@ subroutine LHSCALC(mag,rhs,delta)
    use parameters_mod
    use global_mod
    implicit none
-   double precision,dimension(1:NX,1:NY,4)              :: mag
-   double precision,dimension(1:NX,1:NY,3)              :: rhs
-   double precision,dimension(1:NX,1:NY,3)              :: delta
-   !double precision,dimension(1:NX,1:NY,3)              :: delta1
+   double precision,dimension(1:NXMAX,1:NYMAX,4)              :: mag
+   double precision,dimension(1:NXMAX,1:NYMAX,3)              :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3)              :: delta
+   !double precision,dimension(1:NXMAX,1:NYMAX,3)              :: delta1
 
    if(AORDER.eq.0) mag=0.0d0
    !Implicit treatment of source term
@@ -27,11 +27,11 @@ subroutine EXPLICIT(rhs,delta)
    use parameters_mod
    implicit none
    integer :: i,j,k
-   double precision,dimension(1:NX,1:NY,3),intent(in)   :: rhs
-   double precision,dimension(1:NX,1:NY,3),intent(out)  :: delta
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(in)   :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(out)  :: delta
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          do k = 1,3
             delta(i,j,k) = rhs(i,j,k)
          enddo
@@ -50,15 +50,13 @@ subroutine SOURCEIMP(mag,rhs,delta)
    use global_mod
    implicit none
    integer :: i,j
-   double precision,dimension(1:NX,1:NY,4),intent(in)   :: mag
-   double precision,dimension(1:NX,1:NY,3),intent(in)   :: rhs
-   double precision,dimension(1:NX,1:NY,3),intent(out)  :: delta
+   double precision,dimension(1:NXMAX,1:NYMAX,4),intent(in)   :: mag
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(in)   :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(out)  :: delta
    double precision :: det,m1,m2,m3,m4
-   integer :: bb
 
-   bb = bound
-   do j = 1,NY
-      do i = 1+bb,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          m1 = mag(i,j,1);m2 = mag(i,j,2)
          m3 = mag(i,j,3);m4 = mag(i,j,4)
          det = DTELE**2.0d0*(m1*m4-m2*m3)+DTELE*(m1+m4)+1.0d0
@@ -83,23 +81,23 @@ subroutine XFLUXIMP(rhs,delta)
    use global_mod
    implicit none
    integer :: i,j,k
-   double precision,dimension(1:NX,1:NY,3),intent(in)   :: rhs
-   double precision,dimension(1:NX,1:NY,3),intent(out)  :: delta
-   double precision,dimension(1:NX,1:NY,3)  :: deltah
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(in)   :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(out)  :: delta
+   double precision,dimension(1:NXMAX,1:NYMAX,3)  :: deltah
    double precision :: hh
    double precision,dimension(3) :: qq1,qq2
 
    !LDU-factorization + SGS
    hh = DTELE/DXL
-   do j = 1,NY
+   do j = 1,NYMAX
       !Sweep 1
-      do i = 1,NX
+      do i = 1,NXMAX
          !Calculation of LdQ
          if(i.eq.1) then
             qq1(1) = 0.0d0
             qq1(2) = 0.0d0
             qq1(3) = 0.0d0
-         else if(i.ge.2 .and. i.le.NX) then
+         else if(i.ge.2 .and. i.le.NXMAX) then
             qq1(1) =-hh*0.5d0*(rhs(i-1,j,1)+rhs(i-1,j,2))
             qq1(2) =-hh*0.5d0*(rhs(i-1,j,1)+rhs(i-1,j,2))
             qq1(3) = 0.0d0
@@ -113,25 +111,25 @@ subroutine XFLUXIMP(rhs,delta)
             deltah(i,j,1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq2(1)+( 0.5d0*hh)     *qq2(2))
             deltah(i,j,2) = 1.0d0/(1.0d0+hh)*(( 0.5d0*hh)     *qq2(1)+(1.0d0+0.5d0*hh)*qq2(2))
             deltah(i,j,3) = qq2(3)
-         else if(i.ge.2 .and. i.le.NX-1) then
+         else if(i.ge.2 .and. i.le.NXMAX-1) then
             deltah(i,j,1) = 1.0d0/(1.0d0+hh)*qq2(1)
             deltah(i,j,2) = 1.0d0/(1.0d0+hh)*qq2(2)
             deltah(i,j,3) = qq2(3)
-         else if(i.eq.NX) then
+         else if(i.eq.NXMAX) then
             deltah(i,j,1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq2(1)+(-0.5d0*hh)     *qq2(2))
             deltah(i,j,2) = 1.0d0/(1.0d0+hh)*((-0.5d0*hh)     *qq2(1)+(1.0d0+0.5d0*hh)*qq2(2))
             deltah(i,j,3) = qq2(3)
          endif
       enddo
       !Sweep 2
-      do k = 1,NX
-         i = NX-k+1
+      do k = 1,NXMAX
+         i = NXMAX-k+1
          !Calculation of UdQ
-         if(i.eq.NX) then
+         if(i.eq.NXMAX) then
             qq1(1) = 0.0d0
             qq1(2) = 0.0d0
             qq1(3) = 0.0d0
-         else if(i.ge.1 .and. i.le.NX-1) then
+         else if(i.ge.1 .and. i.le.NXMAX-1) then
             qq1(1) = hh*0.5d0*(-deltah(i+1,j,1)+deltah(i+1,j,2))
             qq1(2) = hh*0.5d0*( deltah(i+1,j,1)-deltah(i+1,j,2))
             qq1(3) = 0.0d0
@@ -141,11 +139,11 @@ subroutine XFLUXIMP(rhs,delta)
             qq2(1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq1(1)+( 0.5d0*hh)     *qq1(2))
             qq2(2) = 1.0d0/(1.0d0+hh)*(( 0.5d0*hh)     *qq1(1)+(1.0d0+0.5d0*hh)*qq1(2))
             qq2(3) = qq1(3)
-         else if(i.ge.2 .and. i.le.NX-1) then
+         else if(i.ge.2 .and. i.le.NXMAX-1) then
             qq2(1) = 1.0d0/(1.0d0+hh)*qq1(1)
             qq2(2) = 1.0d0/(1.0d0+hh)*qq1(2)
             qq2(3) = qq1(3)
-         else if(i.eq.NX) then
+         else if(i.eq.NXMAX) then
             qq2(1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq1(1)+(-0.5d0*hh)     *qq1(2))
             qq2(2) = 1.0d0/(1.0d0+hh)*((-0.5d0*hh)     *qq1(1)+(1.0d0+0.5d0*hh)*qq1(2))
             qq2(3) = qq1(3)
@@ -169,23 +167,23 @@ subroutine YFLUXIMP(rhs,delta)
    use global_mod
    implicit none
    integer :: i,j,k
-   double precision,dimension(1:NX,1:NY,3),intent(in)   :: rhs
-   double precision,dimension(1:NX,1:NY,3),intent(out)  :: delta
-   double precision,dimension(1:NX,1:NY,3)  :: deltah
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(in)   :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(out)  :: delta
+   double precision,dimension(1:NXMAX,1:NYMAX,3)  :: deltah
    double precision :: hh
    double precision,dimension(3) :: qq1,qq2
 
    !LDU-factorization + SGS
    hh = DTELE/DYL
-   do i = 1,NX
+   do i = 1,NXMAX
       !Sweep 1
-      do j = 1,NY
+      do j = 1,NYMAX
          !Calculation of LdQ
          if(j.eq.1) then
             qq1(1) = 0.0d0
             qq1(2) = 0.0d0
             qq1(3) = 0.0d0
-         else if(j.ge.2 .and. j.le.NY) then
+         else if(j.ge.2 .and. j.le.NYMAX) then
             qq1(1) =-hh*0.5d0*(rhs(i,j-1,1)+rhs(i,j-1,3))
             qq1(2) = 0.0d0
             qq1(3) =-hh*0.5d0*(rhs(i,j-1,1)+rhs(i,j-1,3))
@@ -199,25 +197,25 @@ subroutine YFLUXIMP(rhs,delta)
             deltah(i,j,1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq2(1)+( 0.5d0*hh)     *qq2(3))
             deltah(i,j,2) = qq2(2)
             deltah(i,j,3) = 1.0d0/(1.0d0+hh)*(( 0.5d0*hh)     *qq2(1)+(1.0d0+0.5d0*hh)*qq2(3))
-         else if(j.ge.2 .and. j.le.NY-1) then
+         else if(j.ge.2 .and. j.le.NYMAX-1) then
             deltah(i,j,1) = 1.0d0/(1.0d0+hh)*qq2(1)
             deltah(i,j,2) =                  qq2(2)
             deltah(i,j,3) = 1.0d0/(1.0d0+hh)*qq2(3)
-         else if(j.eq.NY) then
+         else if(j.eq.NYMAX) then
             deltah(i,j,1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq2(1)+(-0.5d0*hh)     *qq2(3))
             deltah(i,j,2) = qq2(2)
             deltah(i,j,3) = 1.0d0/(1.0d0+hh)*((-0.5d0*hh)     *qq2(1)+(1.0d0+0.5d0*hh)*qq2(3))
          endif
       enddo
       !Sweep 2
-      do k = 1,NY
-         j = NY-k+1
+      do k = 1,NYMAX
+         j = NYMAX-k+1
          !Calculation of UdQ
-         if(j.eq.NY) then
+         if(j.eq.NYMAX) then
             qq1(1) = 0.0d0
             qq1(2) = 0.0d0
             qq1(3) = 0.0d0
-         else if(j.ge.1 .and. j.le.NY-1) then
+         else if(j.ge.1 .and. j.le.NYMAX-1) then
             qq1(1) = hh*0.5d0*(-deltah(i,j+1,1)+deltah(i,j+1,3))
             qq1(2) = 0.0d0
             qq1(3) = hh*0.5d0*( deltah(i,j+1,1)-deltah(i,j+1,3))
@@ -227,11 +225,11 @@ subroutine YFLUXIMP(rhs,delta)
             qq2(1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq1(1)+( 0.5d0*hh)     *qq1(3))
             qq2(2) = qq1(2)
             qq2(3) = 1.0d0/(1.0d0+hh)*(( 0.5d0*hh)     *qq1(1)+(1.0d0+0.5d0*hh)*qq1(3))
-         else if(j.ge.2 .and. j.le.NY-1) then
+         else if(j.ge.2 .and. j.le.NYMAX-1) then
             qq2(1) = 1.0d0/(1.0d0+hh)*qq1(1)
             qq2(2) =                  qq1(2)
             qq2(3) = 1.0d0/(1.0d0+hh)*qq1(3)
-         else if(j.eq.NY) then
+         else if(j.eq.NYMAX) then
             qq2(1) = 1.0d0/(1.0d0+hh)*((1.0d0+0.5d0*hh)*qq1(1)+(-0.5d0*hh)     *qq1(3))
             qq2(2) = qq1(2)
             qq2(3) = 1.0d0/(1.0d0+hh)*((-0.5d0*hh)     *qq1(1)+(1.0d0+0.5d0*hh)*qq1(3))
@@ -249,21 +247,21 @@ endsubroutine
 
 !-------------------LUSGS method for HES--------------------------------
 
-subroutine LUSGSHES2D(NX,NY,dt,aa,bb,cc,dd,ee,ff,gg,hh,dinv,rhs,delta)
+subroutine LUSGSHES2D(NXMAX,NYMAX,dt,aa,bb,cc,dd,ee,ff,gg,hh,dinv,rhs,delta)
 
    implicit none
    integer :: i,j,k,l
-   integer,intent(in)                                  :: NX,NY
+   integer,intent(in)                                  :: NXMAX,NYMAX
    double precision,intent(in)                         :: dt
-   double precision,dimension(1:NX,1:NY,5),intent(in)  :: aa,bb,cc,dd,ee,ff,gg,hh
-   double precision,dimension(1:NX,1:NY,9),intent(in)  :: dinv
-   double precision,dimension(1:NX,1:NY,3),intent(in)  :: rhs
-   double precision,dimension(1:NX,1:NY,3),intent(out) :: delta
-   double precision,dimension(-1:NX+2,-1:NY+2,3)       :: del1,del2
+   double precision,dimension(1:NXMAX,1:NYMAX,5),intent(in)  :: aa,bb,cc,dd,ee,ff,gg,hh
+   double precision,dimension(1:NXMAX,1:NYMAX,9),intent(in)  :: dinv
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(in)  :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(out) :: delta
+   double precision,dimension(-1:NXMAX+2,-1:NYMAX+2,3)       :: del1,del2
    double precision :: xx1,xx2,xx3
 
-   do j =-1,NY+2
-      do i =-1,NX+2
+   do j =-1,NYMAX+2
+      do i =-1,NXMAX+2
          do k = 1,3
             del1(i,j,k) = 0.0d0
             del2(i,j,k) = 0.0d0
@@ -271,8 +269,8 @@ subroutine LUSGSHES2D(NX,NY,dt,aa,bb,cc,dd,ee,ff,gg,hh,dinv,rhs,delta)
       enddo
    enddo
    !Sweep 1
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          xx1 = rhs(i,j,1)-dt*(&
                aa(i,j,1)*del1(i-2,j  ,1)+aa(i,j,2)*del1(i-1,j  ,1)&
               +bb(i,j,1)*del1(i-2,j  ,2)+bb(i,j,2)*del1(i-1,j  ,2)&
@@ -290,10 +288,10 @@ subroutine LUSGSHES2D(NX,NY,dt,aa,bb,cc,dd,ee,ff,gg,hh,dinv,rhs,delta)
       enddo
    enddo
    !Sweep 2
-   do l = 1,NY
-      do k = 1,NX
-         i = NX-k+1
-         j = NY-l+1
+   do l = 1,NYMAX
+      do k = 1,NXMAX
+         i = NXMAX-k+1
+         j = NYMAX-l+1
          xx1 = dt*(&
                aa(i,j,4)*del2(i+1,j  ,1)+aa(i,j,5)*del2(i+2,j  ,1)&
               +bb(i,j,4)*del2(i+1,j  ,2)+bb(i,j,5)*del2(i+2,j  ,2)&
@@ -310,8 +308,8 @@ subroutine LUSGSHES2D(NX,NY,dt,aa,bb,cc,dd,ee,ff,gg,hh,dinv,rhs,delta)
          del2(i,j,3) = del1(i,j,3)-(dinv(i,j,7)*xx1+dinv(i,j,8)*xx2+dinv(i,j,9)*xx3)
       enddo
    enddo
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          do k = 1,3
             delta(i,j,k) = del2(i,j,k)
          enddo
@@ -332,25 +330,23 @@ subroutine LUSGS(rhs,delta)
    use global_mod
    implicit none
    integer :: i,j,k
-   double precision,dimension(1:NX,1:NY,3),intent(in)   :: rhs
-   double precision,dimension(1:NX,1:NY,3),intent(out)  :: delta
-   double precision,dimension(0:NX+1,0:NY+1,3)          :: del1,del2
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(in)   :: rhs
+   double precision,dimension(1:NXMAX,1:NYMAX,3),intent(out)  :: delta
+   double precision,dimension(0:NXMAX+1,0:NYMAX+1,3)          :: del1,del2
    double precision :: hhx,hhy
-   integer :: bb
 
-   bb = bound
    hhx = DTELE/DXL/2.0d0
    hhy = DTELE/DYL/2.0d0
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          do k = 1,3
             delta(i,j,k) = 0.0d0
          enddo
       enddo
    enddo
-   do j = 0,NY+1
-      do i = 0,NX+1
+   do j = 0,NYMAX+1
+      do i = 0,NXMAX+1
          do k = 1,3
             del1(i,j,k) = 0.0d0
             del2(i,j,k) = 0.0d0
@@ -360,30 +356,31 @@ subroutine LUSGS(rhs,delta)
 
    !LDU-factorization + SGS
    !Sweep 1
-   do j = 1,NY
-      do i = 1+bb,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          del1(i,j,1) = 1.0d0/(1.0d0+hhx+hhy)*(rhs(i,j,1)-(-hhx*del1(i-1,j,1)-hhx*del1(i-1,j,2)-hhy*del1(i,j-1,1)-hhy*del1(i,j-1,3)))
          del1(i,j,2) = 1.0d0/(1.0d0+hhx)    *(rhs(i,j,2)-(-hhx*del1(i-1,j,1)-hhx*del1(i-1,j,2)                                    ))
          del1(i,j,3) = 1.0d0/(1.0d0+hhy)    *(rhs(i,j,3)-(                                    -hhy*del1(i,j-1,1)-hhy*del1(i,j-1,3)))
       enddo
    enddo
    !Sweep 2
-   do j = 1,NY
-      do k = 1,NX-bb
-         i = NX-k+1
+   do j = 1,NYMAX
+      do k = 1,NXMAX
+         i = NXMAX-k+1
          del2(i,j,1) = del1(i,j,1)-(1.0d0/(1.0d0+hhx+hhy)*(-hhx*del2(i+1,j,1)+hhx*del2(i+1,j,2)-hhy*del2(i,j+1,1)+hhy*del2(i,j+1,3)))
          del2(i,j,2) = del1(i,j,2)-(1.0d0/(1.0d0+hhx)    *( hhx*del2(i+1,j,1)-hhx*del2(i+1,j,2)                                    ))
          del2(i,j,3) = del1(i,j,3)-(1.0d0/(1.0d0+hhy)    *(                                     hhy*del2(i,j+1,1)-hhy*del2(i,j+1,3)))
       enddo
    enddo
 
-   do j = 1,NY
-      do i = 1+bb,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          do k = 1,3
             delta(i,j,k) = del2(i,j,k)
          enddo
       enddo
    enddo
+
 
    return
 endsubroutine

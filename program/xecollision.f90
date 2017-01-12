@@ -12,20 +12,20 @@ subroutine XenonCollision(Tele,nneu,nele,babs,nm,pic,fcol,fion,qion,Omee,cond)
    implicit none
    integer :: i,j,m,ip,jp
    integer                              ,intent(in)    :: nm
-   double precision,dimension(1:NX,1:NY),intent(in)    :: nele
-   double precision,dimension(1:NX,1:NY),intent(in)    :: babs
-   double precision,dimension(1:NX,1:NY),intent(inout) :: nneu
-   double precision,dimension(NMAX,11)  ,intent(in)    :: pic
-   double precision,dimension(1:NX,1:NY),intent(inout) :: Tele
-   double precision,dimension(1:NX,1:NY),intent(inout) :: fcol,fion,qion,Omee,cond
-   double precision,dimension(1:NX,1:NY) :: ncon,nacl
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)    :: nele
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)    :: babs
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: nneu
+   double precision,dimension(NPMAX,11)       ,intent(in)    :: pic
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: Tele
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: fcol,fion,qion,Omee,cond
+   double precision,dimension(1:NXMAX,1:NYMAX) :: ncon,nacl
 
    call ElasticColFreq(nneu,Tele,fcol)
    call IonizationColFreq(nneu,Tele,fion)
 
    !Correction of ionization collision frequency
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          nacl(i,j) = 0.0d0
          ncon(i,j) = cons(i,j)+nele(i,j)*fion(i,j)*DXL*DYL*ZL*DTPIC
       enddo
@@ -42,8 +42,8 @@ subroutine XenonCollision(Tele,nneu,nele,babs,nm,pic,fcol,fion,qion,Omee,cond)
    enddo
    !$omp end do
    !$omp end parallel
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          if(cons(i,j).gt.nacl(i,j)) then
             cons(i,j) = nacl(i,j)
             qion(i,j) = 0.0d0
@@ -55,8 +55,8 @@ subroutine XenonCollision(Tele,nneu,nele,babs,nm,pic,fcol,fion,qion,Omee,cond)
       enddo
    enddo
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          if(fcol(i,j).lt.NUMIN) then
             fcol(i,j) = NUMIN
             cond(i,j) = nele(i,j)*ECH/ME/fcol(i,j)
@@ -71,8 +71,8 @@ subroutine XenonCollision(Tele,nneu,nele,babs,nm,pic,fcol,fion,qion,Omee,cond)
    enddo
 
    if(it.ge.1) then
-      do j = 1,NY
-         do i = 1,NX
+      do j = 1,NYMAX
+         do i = 1,NXMAX
             qion_ave(i,j) = qion_ave(i,j)+qion(i,j)/dble(ISMP)
          enddo
       enddo
@@ -91,9 +91,9 @@ subroutine ElasticColFreq(nneu,Tele,fcol)
    implicit none
    integer :: i,j
    double precision :: rate_cof,te
-   double precision,dimension(1:NX,1:NY),intent(in)    :: Tele
-   double precision,dimension(1:NX,1:NY),intent(in)    :: nneu
-   double precision,dimension(1:NX,1:NY),intent(out)   :: fcol
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)    :: Tele
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)    :: nneu
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out)   :: fcol
    double precision,dimension(0:6)  :: c
 
    c(6) =-2.3131961087d-22
@@ -105,8 +105,8 @@ subroutine ElasticColFreq(nneu,Tele,fcol)
    c(0) =-1.3643694581d-14
    !$omp parallel default(none),shared(c,Tele,nneu,fcol),private(i,j,te,rate_cof)
    !$omp do
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          te = Tele(i,j)
          rate_cof = dmax1(c(6)*te**6.0d0+c(5)*te**5.0d0+c(4)*te**4.0d0 &
                          +c(3)*te**3.0d0+c(2)*te**2.0d0+c(1)*te+c(0),0.0d0)
@@ -116,8 +116,8 @@ subroutine ElasticColFreq(nneu,Tele,fcol)
    !$omp end do
    !$omp end parallel
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          if(fcol(i,j).lt.0.0d0) then
             write(*,*) 'Warning...Error in fcol',i,j,fcol(i,j),nneu(i,j)
          endif
@@ -136,9 +136,9 @@ subroutine IonizationColFreq(nneu,Tele,fion)
    !$ use omp_lib
    implicit none
    integer :: i,j
-   double precision,dimension(1:NX,1:NY),intent(in)    :: Tele
-   double precision,dimension(1:NX,1:NY),intent(in)    :: nneu
-   double precision,dimension(1:NX,1:NY),intent(out)   :: fion
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)    :: Tele
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)    :: nneu
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out)   :: fion
    double precision  :: te,rate_cof
    double precision,dimension(0:6)  :: c
 
@@ -151,8 +151,8 @@ subroutine IonizationColFreq(nneu,Tele,fion)
    c(0) =-3.9979581660d-15
    !$omp parallel default(none),shared(c,Tele,nneu,fion),private(i,j,te,rate_cof)
    !$omp do
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          te = Tele(i,j)
          rate_cof = dmax1(c(6)*te**6.0d0+c(5)*te**5.0d0+c(4)*te**4.0d0 &
                          +c(3)*te**3.0d0+c(2)*te**2.0d0+c(1)*te+c(0),0.0d0)
@@ -162,8 +162,8 @@ subroutine IonizationColFreq(nneu,Tele,fion)
    !$omp end do
    !$omp end parallel
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          if(fion(i,j).lt.0.0d0) then
             write(*,*) 'Warning...Error in fion',i,j,fion(i,j),nneu(i,j)
          endif

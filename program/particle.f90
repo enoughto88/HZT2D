@@ -14,16 +14,16 @@ subroutine Particle2D3V(nm,pic,efnd,bfnd,qion,nneu,nele,time_pic)
    implicit none
    integer :: i,j
    integer :: time_pre,time_post,time_pic
-   integer                              ,intent(inout)    :: nm         !Number of particles
-   double precision,dimension(NMAX,11)  ,intent(inout)    :: pic        !Particle information
-   double precision,dimension(1:NX,1:NY),intent(in)       :: qion       ![m-3s-1] Electron production rate
-   double precision,dimension(1:NX,1:NY),intent(out)      :: nneu       ![m-3] Neutral number density
-   double precision,dimension(1:NX,1:NY),intent(out)      :: nele       ![m-3] Electron number density
-   double precision,dimension(1:NX+1,1:NY+1,2),intent(in) :: efnd       ![Vm-1] Electric field defined at nodes
-   double precision,dimension(1:NX+1,1:NY+1),intent(in)   :: bfnd       ![T] Radial magnetic flux density defined as nodes
-   double precision,dimension(NMAX,2)                     :: efp
-   double precision,dimension(NMAX)                       :: bfp
-   double precision,dimension(NMAX,5)                     :: post
+   integer                                    ,intent(inout)    :: nm         !Number of particles
+   double precision,dimension(NPMAX,11)       ,intent(inout)    :: pic        !Particle information
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(in)       :: qion       ![m-3s-1] Electron production rate
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out)      :: nneu       ![m-3] Neutral number density
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out)      :: nele       ![m-3] Electron number density
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1,2),intent(in) :: efnd       ![Vm-1] Electric field defined at nodes
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1),intent(in)   :: bfnd       ![T] Radial magnetic flux density defined as nodes
+   double precision,dimension(NPMAX,2)                     :: efp
+   double precision,dimension(NPMAX)                       :: bfp
+   double precision,dimension(NPMAX,5)                     :: post
 
 
    call system_clock(count = time_pre)
@@ -46,8 +46,8 @@ subroutine Particle2D3V(nm,pic,efnd,bfnd,qion,nneu,nele,time_pic)
 
    !Data accumulation for output of average
    if(it.ge.1) then
-      do j = 1,NY
-         do i = 1,NX
+      do j = 1,NYMAX
+         do i = 1,NXMAX
             nneu_ave(i,j) = nneu_ave(i,j)+nneu(i,j)/dble(ISMP)
             nele_ave(i,j) = nele_ave(i,j)+nele(i,j)/dble(ISMP)
          enddo
@@ -76,7 +76,7 @@ subroutine Inflow_particle(nm,pic)
    implicit none
    integer :: m
    integer                            ,intent(inout) :: nm
-   double precision,dimension(NMAX,11),intent(inout) :: pic
+   double precision,dimension(NPMAX,11),intent(inout) :: pic
    integer               :: npin
    double precision      :: cc,dd,psiz,vth2,flow
 
@@ -122,7 +122,7 @@ subroutine InflowParticle_Differential(nm,pic)
    implicit none
    integer :: m
    integer                            ,intent(inout) :: nm
-   double precision,dimension(NMAX,11),intent(inout) :: pic
+   double precision,dimension(NPMAX,11),intent(inout) :: pic
    integer               :: npin
    double precision      :: cc,dd,psiz,vth2,flow
 
@@ -167,16 +167,16 @@ subroutine Ionization_particle(nm,pic,qion)
    !$ use omp_lib
    implicit none
    integer                                ,intent(inout) :: nm
-   double precision,dimension(NMAX,11)    ,intent(inout) :: pic
-   double precision,dimension(1:NX,1:NY)  ,intent(in)    :: qion         ![m-3s-1] Electron production rate
-   double precision,dimension(1:NX,1:NY)                 :: nacl
-   integer         ,dimension(NMAX)                      :: lcrd
-   integer         ,dimension(NMAX)                      :: npin
-   double precision,dimension(NMAX)                      :: psiz
+   double precision,dimension(NPMAX,11)    ,intent(inout) :: pic
+   double precision,dimension(1:NXMAX,1:NYMAX)  ,intent(in)    :: qion         ![m-3s-1] Electron production rate
+   double precision,dimension(1:NXMAX,1:NYMAX)                 :: nacl
+   integer         ,dimension(NPMAX)                      :: lcrd
+   integer         ,dimension(NPMAX)                      :: npin
+   double precision,dimension(NPMAX)                      :: psiz
    integer :: m,k,i,j,ip,jp,ngen
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          nacl(i,j)   = 0.0d0
          cons(i,j)   = cons(i,j)+qion(i,j)*DXL*DYL*ZL*DTPIC
       enddo
@@ -190,8 +190,8 @@ subroutine Ionization_particle(nm,pic,qion)
       endif
    enddo
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          if(cons(i,j).gt.nacl(i,j)) then
             write(*,*) 'Warning...No neutral particle, program error1',i,j,cons(i,j),qion(i,j),nacl(i,j)
             cons(i,j) = 0.0d0
@@ -204,7 +204,7 @@ subroutine Ionization_particle(nm,pic,qion)
    ngen = 0
    !$omp parallel default(none),shared(lcrd,npin,psiz),private(m)
    !$omp do
-   do m = 1,NMAX
+   do m = 1,NPMAX
       lcrd(m) = 0
       npin(m) = 0
       psiz(m) = 0.0d0
@@ -261,11 +261,11 @@ subroutine ApplyField(nm,pic,efnd,bfnd,efp,bfp)
    !$ use omp_lib
    implicit none
    integer                              ,intent(in)       :: nm
-   double precision,dimension(NMAX,11)  ,intent(in)       :: pic        !Particle information
-   double precision,dimension(1:NX+1,1:NY+1,2),intent(in) :: efnd       ![Vm-1] Electric field defined at nodes
-   double precision,dimension(1:NX+1,1:NY+1),intent(in)   :: bfnd       ![T] Radial magnetic flux density defined as nodes
-   double precision,dimension(NMAX,2),intent(out)         :: efp
-   double precision,dimension(NMAX)  ,intent(out)         :: bfp
+   double precision,dimension(NPMAX,11)  ,intent(in)       :: pic        !Particle information
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1,2),intent(in) :: efnd       ![Vm-1] Electric field defined at nodes
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1),intent(in)   :: bfnd       ![T] Radial magnetic flux density defined as nodes
+   double precision,dimension(NPMAX,2),intent(out)         :: efp
+   double precision,dimension(NPMAX)  ,intent(out)         :: bfp
    integer :: m,ip,jp
    double precision :: xc,yc
    double precision,dimension(4) :: p
@@ -281,8 +281,8 @@ subroutine ApplyField(nm,pic,efnd,bfnd,efp,bfp)
       else if(pic(m,7).gt.0.9d0) then
          ip = int(pic(m,8)+0.1d0)
          jp = int(pic(m,9)+0.1d0)
-         if(ip.le.0 .or. ip.ge.NX+1 .or. &
-            jp.le.0 .or. jp.ge.NY+1) then
+         if(ip.le.0 .or. ip.ge.NXMAX+1 .or. &
+            jp.le.0 .or. jp.ge.NYMAX+1) then
             write(*,*) 'Warning...Irregular particle position...Belong',m,ip,jp,pic(m,1),pic(m,2)
          else
             xc  = pic(m,10)
@@ -318,10 +318,10 @@ subroutine Judge_Particle(nm,pic,post)
    !$ use omp_lib
    implicit none
    integer                            ,intent(inout)  :: nm
-   double precision,dimension(NMAX,11),intent(inout)  :: pic
-   double precision,dimension(NMAX,5) ,intent(inout)  :: post
+   double precision,dimension(NPMAX,11),intent(inout)  :: pic
+   double precision,dimension(NPMAX,5) ,intent(inout)  :: post
    integer                 :: ndel
-   integer,dimension(NMAX) :: lcrd,search
+   integer,dimension(NPMAX) :: lcrd,search
    integer                 :: m,k,l
    double precision        :: dt
    double precision        :: xx1,yy1,xx2,yy2
@@ -332,7 +332,7 @@ subroutine Judge_Particle(nm,pic,post)
    ndel = 0
    !$omp parallel default(none),shared(search,lcrd),private(m)
    !$omp do
-   do m = 1,NMAX
+   do m = 1,NPMAX
       search(m) = 0
       lcrd(m) = 0
    enddo
@@ -447,10 +447,10 @@ subroutine Leapfrog_Particle(nm,pic,efp,bfp,post)
    !$ use omp_lib
    implicit none
    integer                            ,intent(in)  :: nm
-   double precision,dimension(NMAX,11),intent(in)  :: pic
-   double precision,dimension(NMAX,2) ,intent(in)  :: efp
-   double precision,dimension(NMAX)   ,intent(in)  :: bfp
-   double precision,dimension(NMAX,5) ,intent(out) :: post
+   double precision,dimension(NPMAX,11),intent(in)  :: pic
+   double precision,dimension(NPMAX,2) ,intent(in)  :: efp
+   double precision,dimension(NPMAX)   ,intent(in)  :: bfp
+   double precision,dimension(NPMAX,5) ,intent(out) :: post
    integer                                         :: m
 
    !$omp parallel default(none),shared(nm,pic,efp,bfp,post),private(m)
@@ -478,19 +478,19 @@ subroutine Density(nm,pic,nneu,nele)
    !$ use omp_lib
    implicit none
    integer                            ,intent(in)    :: nm
-   double precision,dimension(NMAX,11),intent(inout) :: pic
-   double precision,dimension(1:NX,1:NY),intent(out) :: nneu
-   double precision,dimension(1:NX,1:NY),intent(out) :: nele
-   double precision,dimension(1:NX+1,1:NY+1)         :: nabdn,nabdi
-   double precision,dimension(1:NX+1,1:NY+1)         :: nandn,nandi
-   double precision,dimension(1:NX,1:NY)             :: nacln,nacli
+   double precision,dimension(NPMAX,11),intent(inout) :: pic
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out) :: nneu
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out) :: nele
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1)         :: nabdn,nabdi
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1)         :: nandn,nandi
+   double precision,dimension(1:NXMAX,1:NYMAX)             :: nacln,nacli
    integer          :: i,j,m,ip,jp
    double precision :: xc,yc
    double precision,dimension(4) :: p
 
 
-   do j = 1,NY+1
-      do i = 1,NX+1
+   do j = 1,NYMAX+1
+      do i = 1,NXMAX+1
          nandn(i,j) = 0.0d0
          nandi(i,j) = 0.0d0
       enddo
@@ -503,8 +503,8 @@ subroutine Density(nm,pic,nneu,nele)
       if(pic(m,6).lt.0.0d0) then
          write(*,*) 'Warning...Negative particle ',m,ip,jp,pic(m,6)
       endif
-      if(ip.le.0 .or. ip.ge.NX+1 .or. &
-         jp.le.0 .or. jp.ge.NY+1) then
+      if(ip.le.0 .or. ip.ge.NXMAX+1 .or. &
+         jp.le.0 .or. jp.ge.NYMAX+1) then
          write(*,*) 'Warning...Irregular particle position...density',m,ip,jp,pic(m,1),pic(m,2)
       else
          xc  = (pic(m,1)-DXL*(dble(ip)-1.0d0))/DXL
@@ -536,35 +536,35 @@ subroutine Density(nm,pic,nneu,nele)
    !$omp end do
    !$omp end parallel
 
-   do j = 1,NY+1
-      do i = 1,NX+1
+   do j = 1,NYMAX+1
+      do i = 1,NXMAX+1
          if(j.eq.1 ) then
-            nabdn(i,j) = nandn(i,1)+nandn(i,NY+1)
-            nabdi(i,j) = nandi(i,1)+nandi(i,NY+1)
-         else if(j.eq.NY+1) then
-            nabdn(i,j) = nandn(i,NY+1)+nandn(i,1)
-            nabdi(i,j) = nandi(i,NY+1)+nandi(i,1)
+            nabdn(i,j) = nandn(i,1)+nandn(i,NYMAX+1)
+            nabdi(i,j) = nandi(i,1)+nandi(i,NYMAX+1)
+         else if(j.eq.NYMAX+1) then
+            nabdn(i,j) = nandn(i,NYMAX+1)+nandn(i,1)
+            nabdi(i,j) = nandi(i,NYMAX+1)+nandi(i,1)
          else
             nabdn(i,j) = nandn(i,j)
             nabdi(i,j) = nandi(i,j)
          endif
       enddo
    enddo
-   do j = 1,NY+1
+   do j = 1,NYMAX+1
       nabdn(1,j)    = 2.0d0*nabdn(1,j)
       nabdi(1,j)    = 2.0d0*nabdi(1,j)
-      nabdn(NX+1,j) = 2.0d0*nabdn(NX+1,j)
-      nabdi(NX+1,j) = 2.0d0*nabdi(NX+1,j)
+      nabdn(NXMAX+1,j) = 2.0d0*nabdn(NXMAX+1,j)
+      nabdi(NXMAX+1,j) = 2.0d0*nabdi(NXMAX+1,j)
       !nabdn(1,j)    = nabdn(2,j)
       !nabdi(1,j)    = nabdi(2,j)
-      !nabdn(NX+1,j) = nabdn(NX,j)
-      !nabdi(NX+1,j) = nabdi(NX,j)
+      !nabdn(NXMAX+1,j) = nabdn(NXMAX,j)
+      !nabdi(NXMAX+1,j) = nabdi(NXMAX,j)
    enddo
 
    !$omp parallel default(none),shared(nandn,nacln,nneu,nandi,nacli,nele),private(i,j)
    !$omp do
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          nacln(i,j) = 0.25d0*(nabdn(i,j)+nabdn(i+1,j)+nabdn(i,j+1)+nabdn(i+1,j+1))
          nacli(i,j) = 0.25d0*(nabdi(i,j)+nabdi(i+1,j)+nabdi(i,j+1)+nabdi(i+1,j+1))
          nneu(i,j) = nacln(i,j)/DXL/DYL/ZL
@@ -587,7 +587,7 @@ subroutine Trajectory(pic)
 
    use parameters_mod
    implicit none
-   double precision,dimension(NMAX,11)  ,intent(inout)  :: pic          !Particle information
+   double precision,dimension(NPMAX,11)  ,intent(inout)  :: pic          !Particle information
    character(len=30) :: dname
 
    !Generate trajectory information of 50 macroparticles

@@ -7,12 +7,12 @@ subroutine InitialField(Tele,phii,uele,vele)
    implicit none
    character(len=30) :: dname
    integer :: i,j,ios
-   double precision,dimension(1:NX,1:NY),intent(out)   :: Tele
-   double precision,dimension(1:NX,1:NY),intent(out)   :: phii,uele,vele
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out)   :: Tele
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(out)   :: phii,uele,vele
    double precision,dimension(2) :: check
 
-   do j = 1,NY
-      do i = 1,NX
+   do j = 1,NYMAX
+      do i = 1,NXMAX
          phii(i,j) = PHIA-PHIA*(((dble(i)-0.5d0)*DXL)/XL)
          uele(i,j) = 0.0d0
          vele(i,j) = 0.0d0
@@ -23,8 +23,8 @@ subroutine InitialField(Tele,phii,uele,vele)
       dname = '/data/'
       open(16,file=trim(TOPDIR)//trim(dname)//'initialphite.dat',form='formatted',&
          status='old',action='read',position='rewind')
-         do j = 1,NY
-            do i = 1,NX
+         do j = 1,NYMAX
+            do i = 1,NXMAX
                read(16,*,iostat=ios) phii(i,j),Tele(i,j)
                   if(ios.eq.-1) then
                      write(*,*) 'Error...initialphite.dat is wrong...'
@@ -42,8 +42,8 @@ subroutine InitialField(Tele,phii,uele,vele)
 
       open(17,file=trim(TOPDIR)//trim(dname)//'initialfield.dat',form='formatted',&
          status='old',action='read',position='rewind')
-         do j = 1,NY
-            do i = 1,NX
+         do j = 1,NYMAX
+            do i = 1,NXMAX
                read(17,*,iostat=ios) cons(i,j),phii(i,j),uele(i,j),vele(i,j)
                   if(ios.eq.-1) then
                      write(*,*) 'Error...inputfield.dat is wrong...'
@@ -65,8 +65,8 @@ subroutine InitialField(Tele,phii,uele,vele)
    dname = '/output/datafile/'
    open(unit=12,file=trim(TOPDIR)//trim(dname)//'input.dat',&
       form='formatted',status='unknown')
-      do j = 1,NY
-         do i = 1,NX
+      do j = 1,NYMAX
+         do i = 1,NXMAX
             write(12,'(4E15.5)') &
                Tele(i,j),phii(i,j),uele(i,j),vele(i,j)
          enddo
@@ -89,9 +89,9 @@ subroutine InputParticle(nm,pic,nneu,nele)
    use mtmod
    character(len=30) :: dname
    integer                              ,intent(inout) :: nm
-   double precision,dimension(NMAX,11)  ,intent(inout) :: pic
-   double precision,dimension(1:NX,1:NY),intent(inout) :: nneu
-   double precision,dimension(1:NX,1:NY),intent(inout) :: nele
+   double precision,dimension(NPMAX,11)  ,intent(inout) :: pic
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: nneu
+   double precision,dimension(1:NXMAX,1:NYMAX),intent(inout) :: nele
    integer          :: m,ios
    double precision :: aa,bb
 
@@ -122,7 +122,7 @@ subroutine InputParticle(nm,pic,nneu,nele)
       dname = '/data/'
       open(16,file=trim(TOPDIR)//trim(dname)//'initialpic.dat',form='formatted',&
          status='old',action='read',position='rewind')
-         do m = 1,NMAX
+         do m = 1,NPMAX
             read(16,*,iostat=ios) pic(m,1),pic(m,2),pic(m,3),pic(m,4),pic(m,6),&
                                   pic(m,7),pic(m,8),pic(m,9),pic(m,10),pic(m,11)
             if(ios.lt.0) exit
@@ -157,8 +157,8 @@ subroutine InputMagneticField(babs,bfnd)
    implicit none
    character(len=30) :: dname
    integer :: i,j,s,t,ios
-   double precision,dimension(1:NX,1:NY)     :: babs                    ![T] Radial magnetic flux density
-   double precision,dimension(1:NX+1,1:NY+1) :: bfnd                    ![T] Radial magnetic flux density defined as nodes
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: babs                    ![T] Radial magnetic flux density
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1) :: bfnd                    ![T] Radial magnetic flux density defined as nodes
    double precision :: check
 
 
@@ -166,8 +166,8 @@ subroutine InputMagneticField(babs,bfnd)
       dname = '/data/'
       open(18,file=trim(TOPDIR)//trim(dname)//'SPT100MF.dat',form='formatted',&
          status='old',action='read',position='rewind')
-         do j = 1,NY
-            do i = 1,NX
+         do j = 1,NYMAX
+            do i = 1,NXMAX
                read(18,*,iostat=ios) babs(i,j)
                   if(ios.eq.-1) then
                      write(*,*) 'Error...SPT100MF.dat is wrong...'
@@ -184,14 +184,14 @@ subroutine InputMagneticField(babs,bfnd)
       write(*,*) 'Loaded SPT100MF.dat...'
    endif
 
-   do j = 1,NY+1
-      do i = 1,NX+1
+   do j = 1,NYMAX+1
+      do i = 1,NXMAX+1
          if    (i.eq.1   ) then; s = i+1
-         elseif(i.eq.NX+1) then; s = i-1
+         elseif(i.eq.NXMAX+1) then; s = i-1
          else                  ; s = i
          endif
          if    (j.eq.1   ) then; t = j+1
-         elseif(j.eq.NY+1) then; t = j-1
+         elseif(j.eq.NYMAX+1) then; t = j-1
          else                  ; t = j
          endif
          bfnd(i,j) = 0.25d0*(babs(s-1,t-1)+babs(s,t-1)+babs(s-1,t)+babs(s,t))

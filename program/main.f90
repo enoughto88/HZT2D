@@ -10,26 +10,26 @@ program main
    implicit none
    character(len=6)  :: cname
    character(len=30) :: dname
-   integer :: i,j,m,lpele
+   integer :: nx,ny,m,lpele
    integer :: time_pic,time_ele
-   double precision,dimension(1:NX,1:NY)     :: nele                    ![m-3]  Electron number density
-   double precision,dimension(1:NX,1:NY)     :: nneu                    ![m-3]  Neutral number density
-   double precision,dimension(1:NX,1:NY)     :: Tele                    ![eV]   Electron temperature
-   double precision,dimension(1:NX,1:NY)     :: fcol                    ![s-1]  Total collision frequency
-   double precision,dimension(1:NX,1:NY)     :: fion                    ![s-1]  Ionization collision frequency
-   double precision,dimension(1:NX,1:NY)     :: qion                    ![m-3s-1] Ion production rate
-   double precision,dimension(1:NX,1:NY)     :: phii                    ![V]    Space potential
-   double precision,dimension(1:NX,1:NY)     :: uele                    ![ms-1] x-Velocity
-   double precision,dimension(1:NX,1:NY)     :: vele                    ![ms-1] y-Velocity
-   double precision,dimension(1:NX,1:NY)     :: babs                    ![T] Radial magnetic flux density
-   double precision,dimension(1:NX,1:NY)     :: Omee                    ![-] Electron Hall parameter
-   double precision,dimension(1:NX,1:NY)     :: cond                    ![-] Electron conductivity
-   double precision,dimension(3)             :: resn = 0.0d0
-   double precision,dimension(3)             :: cfl  = 0.0d0
-   double precision,dimension(1:NX+1,1:NY+1,2) :: efnd                  ![Vm-1] Electric field defined at nodes
-   double precision,dimension(1:NX+1,1:NY+1) :: bfnd                    ![T] Radial magnetic flux density defined as nodes
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: nele              ![m-3]  Electron number density
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: nneu              ![m-3]  Neutral number density
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: Tele              ![eV]   Electron temperature
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: fcol              ![s-1]  Total collision frequency
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: fion              ![s-1]  Ionization collision frequency
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: qion              ![m-3s-1] Ion production rate
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: phii              ![V]    Space potential
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: uele              ![ms-1] x-Velocity
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: vele              ![ms-1] y-Velocity
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: babs              ![T] Radial magnetic flux density
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: Omee              ![-] Electron Hall parameter
+   double precision,dimension(1:NXMAX,1:NYMAX)     :: cond              ![-] Electron conductivity
+   double precision,dimension(3)                   :: resn = 0.0d0
+   double precision,dimension(3)                   :: cfl  = 0.0d0
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1,2) :: efnd            ![Vm-1] Electric field defined at nodes
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1)   :: bfnd            ![T] Radial magnetic flux density defined as nodes
    integer                                   :: nm                      !N. of particles
-   double precision,dimension(NMAX,11)       :: pic                     !Particle information
+   double precision,dimension(NPMAX,11)       :: pic                     !Particle information
    double precision :: vxmax,vymax
    integer :: nmi,nmn
 
@@ -43,23 +43,17 @@ program main
    MARCH: do it = 1,ITM
       if(mod(it,ISMP).eq.0) nstp = nstp+1
       if(mod(it,ISMP).eq.1) then
-         momx    = 0.0d0
-         inflow  = 0.0d0
-         outflow = 0.0d0
-         outneu  = 0.0d0
-         oution = 0.0d0
+         momx     = 0.0d0
+         inflow   = 0.0d0
+         outflow  = 0.0d0
+         outneu   = 0.0d0
+         oution   = 0.0d0
          acurrent = 0.0d0
-         do i = 1,3
-            resn_ave(i) = 0.0d0
-         enddo
-         do j = 1,NY
-            do i = 1,NX
-               nele_ave(i,j) = 0.0d0
-               nneu_ave(i,j) = 0.0d0
-               qion_ave(i,j) = 0.0d0
-               phii_ave(i,j) = 0.0d0
-            enddo
-         enddo
+         resn_ave = 0.0d0
+         nele_ave = 0.0d0
+         nneu_ave = 0.0d0
+         qion_ave = 0.0d0
+         phii_ave = 0.0d0
       endif
 
       call XenonCollision(Tele,nneu,nele,babs,nm,pic,fcol,fion,qion,Omee,cond)
@@ -142,29 +136,29 @@ contains
          dname = '/output/distribution/'
          open(unit=22,file=trim(TOPDIR)//trim(dname)//'distribution.'//&
             cname//'.dat',form='formatted',status='replace')
-            do j = 1,NY
-               do i = 1,NX
+            do ny = 1,NYMAX
+               do nx = 1,NXMAX
                   write(22,'(7E15.5)') &
-                     nneu_ave(i,j),nele_ave(i,j),Tele(i,j),phii_ave(i,j),qion_ave(i,j),uele_ave(i,j),vele_ave(i,j)
+                     nneu_ave(nx,ny),nele_ave(nx,ny),Tele(nx,ny),phii_ave(nx,ny),qion_ave(nx,ny),uele_ave(nx,ny),vele_ave(nx,ny)
                enddo
             enddo
          close(22)
 
          open(unit=24,file=trim(TOPDIR)//trim(dname)//'electron.'//&
             cname//'.dat',form='formatted',status='replace')
-            do j = 1,NY
-               do i = 1,NX
+            do ny = 1,NYMAX
+               do nx = 1,NXMAX
                   write(24,'(5E15.5)') &
-                     uele(i,j),cond(i,j),Omee(i,j),fion(i,j),fcol(i,j)
+                     uele(nx,ny),cond(nx,ny),Omee(nx,ny),fion(nx,ny),fcol(nx,ny)
                enddo
             enddo
          close(24)
          !open(unit=24,file=trim(TOPDIR)//trim(dname)//'nodedist.'//&
          !   cname//'.dat',form='formatted',status='replace')
-         !   do j = 1,NY+1
-         !      do i = 1,NX+1
+         !   do ny = 1,NYMAX+1
+         !      do nx = 1,NXMAX+1
          !         write(24,'(2E15.5)') &
-         !            efnd(i,j,1),efnd(i,j,2)
+         !            efnd(nx,ny,1),efnd(nx,ny,2)
          !      enddo
          !   enddo
          !close(24)
@@ -200,10 +194,10 @@ contains
          dname = '/output/datafile/'
          open(unit=24,file=trim(TOPDIR)//trim(dname)//'field.'//&
             cname//'.dat',form='formatted',status='replace')
-            do j = 1,NY
-               do i = 1,NX
+            do ny = 1,NYMAX
+               do nx = 1,NXMAX
                   write(24,'(4E15.5)') &
-                     cons(i,j),phii(i,j),uele(i,j),vele(i,j)
+                     cons(nx,ny),phii(nx,ny),uele(nx,ny),vele(nx,ny)
                enddo
             enddo
          close(24)
@@ -225,27 +219,27 @@ subroutine ElectricField(phii,efnd)
    use global_mod
    !$ use omp_lib
    implicit none
-   double precision,dimension(1:NX,1:NY),intent(in)          :: phii    ![V]    Space potential
-   double precision,dimension(1:NX+1,1:NY+1,2),intent(out)   :: efnd    ![Vm-1] Electric field defined at nodes
-   integer :: i,j,s,t
+   double precision,dimension(1:NXMAX,1:NYMAX)      ,intent(in)  :: phii    ![V]    Space potential
+   double precision,dimension(1:NXMAX+1,1:NYMAX+1,2),intent(out) :: efnd    ![Vm-1] Electric field defined at nodes
+   integer :: nx,ny,s,t
 
 
-   !$omp parallel default(none),shared(phii,efnd),private(i,j,s,t)
+   !$omp parallel default(none),shared(phii,efnd),private(nx,ny,s,t)
    !$omp do
-   do j = 1,NY+1
-      do i = 1,NX+1
-         if    (i.eq.1   ) then; s = i+1
-         elseif(i.eq.NX+1) then; s = i-1
-         else                  ; s = i
+   do ny = 1,NYMAX+1
+      do nx = 1,NXMAX+1
+         if    (nx.eq.1   )    then; s = nx+1
+         elseif(nx.eq.NXMAX+1) then; s = nx-1
+         else                      ; s = nx
          endif
-         if    (j.eq.1   ) then; t = j+1
-         elseif(j.eq.NY+1) then; t = j-1
-         else                  ; t = j
+         if    (ny.eq.1   )    then; t = ny+1
+         elseif(ny.eq.NYMAX+1) then; t = ny-1
+         else                      ; t = ny
          endif
-         efnd(i,j,1) =-0.5d0/DXL*(phii(s  ,t-1)-phii(s-1,t-1))&
-                      -0.5d0/DXL*(phii(s  ,t  )-phii(s-1,t  ))
-         efnd(i,j,2) =-0.5d0/DYL*(phii(s-1,t  )-phii(s-1,t-1))&
-                      -0.5d0/DYL*(phii(s  ,t  )-phii(s  ,t-1))
+         efnd(nx,ny,1) =-0.5d0/DXL*(phii(s  ,t-1)-phii(s-1,t-1))&
+                        -0.5d0/DXL*(phii(s  ,t  )-phii(s-1,t  ))
+         efnd(nx,ny,2) =-0.5d0/DYL*(phii(s-1,t  )-phii(s-1,t-1))&
+                        -0.5d0/DYL*(phii(s  ,t  )-phii(s  ,t-1))
       enddo
    enddo
    !$omp end do
