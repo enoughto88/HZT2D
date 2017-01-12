@@ -5,7 +5,6 @@ module global_mod
    !Time Step
    integer              :: it
    integer              :: nstp  = 0
-   integer              :: bound = 0
    double precision     :: DTELE = 1.0d-12
    !Average quantities
    double precision     :: inflow

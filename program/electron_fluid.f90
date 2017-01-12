@@ -11,7 +11,6 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
    double precision,dimension(1:NX,1:NY),intent(inout) :: phii
    double precision,dimension(1:NX,1:NY),intent(inout) :: uele
    double precision,dimension(1:NX,1:NY),intent(inout) :: vele
-   double precision,dimension(1:NX,1:NY,3) :: init
    double precision,dimension(1:NX,1:NY)    :: Omee                     ![-] Electron Hall parameter
    double precision,dimension(1:NX,1:NY)    :: cond                     ![-] Electron conductivity
    double precision,dimension(-1:NX+2,-1:NY+2,3)       :: var           !Ghost cell is used for y-boundary
@@ -21,31 +20,16 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
    double precision,dimension(1:NX,1:NY,3)   :: delta
    double precision,dimension(1:NX,1:NY,3)   :: sce
    double precision,dimension(1:NX,1:NY,4)   :: ss
-   !double precision,dimension(1:NX,1:NY,9)   :: dinv
    double precision,dimension(1:NX,1:NY,5)   :: aa2,bb2,cc2,dd2,ee2,ff2,gg2,hh2
    double precision,dimension(1:NX,1:NY,3)   :: aa1,bb1,cc1,dd1,ee1,ff1,gg1,hh1
-   integer :: bb
    double precision :: maxpot,minpot
 
    call system_clock(count = time_pre)
 
-   bb = bound
    lpele = 0
-
-      do j = 1,NY
-         do i = 1,NX
-      !      Tele(i,j) = 100.0d0*dsin(4.0d0*PI/dble(NX)*(dble(i)-0.5d0))*dsin(4.0d0*PI/dble(NY)*(dble(j)-0.5d0))
-      !      cond(i,j) = NESTAR
-      !      qion(i,j) = 0.0d0
-      !      Omee(i,j) = 0.0d0
-            init(i,j,1) = phii(i,j)
-            init(i,j,2) = uele(i,j)
-            init(i,j,3) = vele(i,j)
-         enddo
-      enddo
    if(CALELE.eq.1) then
       do j = 1,NY
-         do i = 1+bb,NX
+         do i = 1,NX
             var(i,j,1) =-phii(i,j)
             var(i,j,2) = nele(i,j)*uele(i,j)/NESTAR
             var(i,j,3) = nele(i,j)*vele(i,j)/NESTAR
@@ -57,20 +41,20 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
       do lpele = 1,50000
          !Dirichlet Boundary condition
          do j = 1,NY
-            var(0   +bb,j,1) = 2.0d0*(-PHIA)          -var(1 +bb,j,1)
-            var(-1  +bb,j,1) = 2.0d0*var(0+bb,j,1)    -var(1 +bb,j,1)
+            var(0   ,j,1) = 2.0d0*(-PHIA)       -var(1 ,j,1)
+            var(-1  ,j,1) = 2.0d0*var(0,j,1)    -var(1 ,j,1)
             var(NX+1,j,1) = 2.0d0*(-PHIC)       -var(NX,j,1)
             var(NX+2,j,1) = 2.0d0*var(NX+1,j,1) -var(NX,j,1)
          enddo
          !Neumann Boundary condition
          do j = 1,NY
-            var(0   +bb,j,2) = 2.0d0*var(1   +bb,j,2)-var(2   +bb,j,2)
-            var(-1  +bb,j,2) = 2.0d0*var(0   +bb,j,2)-var(1   +bb,j,2)
+            var(0   ,j,2) = 2.0d0*var(1   ,j,2)-var(2   ,j,2)
+            var(-1  ,j,2) = 2.0d0*var(0   ,j,2)-var(1   ,j,2)
             var(NX+1,j,2) = 2.0d0*var(NX  ,j,2)-var(NX-1,j,2)
             var(NX+2,j,2) = 2.0d0*var(NX+1,j,2)-var(NX  ,j,2)
          enddo
          !Periodic Boundary condition
-         do i = 1+bb,NX
+         do i = 1,NX
             var(i,0   ,1) = var(i,NY  ,1)
             var(i,0   ,2) = var(i,NY  ,2)
             var(i,0   ,3) = var(i,NY  ,3)
@@ -91,10 +75,10 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
                call HESCoefficient1O2D_Y(ee1,ff1,gg1,hh1)
             endif
 
-            !$omp parallel default(none),private(i,j),shared(DTELE,rhs,var,sce,aa1,bb1,cc1,dd1,ee1,ff1,gg1,hh1,ss,bb)
+            !$omp parallel default(none),private(i,j),shared(DTELE,rhs,var,sce,aa1,bb1,cc1,dd1,ee1,ff1,gg1,hh1,ss)
             !$omp do
             do j = 1,NY
-               do i = 1+bb,NX
+               do i = 1,NX
                   rhs(i,j,1) =-DTELE*(&
                                aa1(i,j,1)*var(i-1,j  ,1)+aa1(i,j,2)*var(i  ,j  ,1)+aa1(i,j,3)*var(i+1,j  ,1)&
                               +bb1(i,j,1)*var(i-1,j  ,2)+bb1(i,j,2)*var(i  ,j  ,2)+bb1(i,j,3)*var(i+1,j  ,2)&
@@ -125,10 +109,10 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
                call HESCoefficient2D_Y(var,ee2,ff2,gg2,hh2)
             endif
 
-            !$omp parallel default(none),private(i,j),shared(DTELE,rhs,var,sce,aa2,bb2,cc2,dd2,ee2,ff2,gg2,hh2,ss,bb)
+            !$omp parallel default(none),private(i,j),shared(DTELE,rhs,var,sce,aa2,bb2,cc2,dd2,ee2,ff2,gg2,hh2,ss)
             !$omp do
             do j = 1,NY
-               do i = 1+bb,NX
+               do i = 1,NX
                   rhs(i,j,1) =-DTELE*(&
                                aa2(i,j,1)*var(i-2,j  ,1)+aa2(i,j,2)*var(i-1,j  ,1)+aa2(i,j,3)*var(i  ,j  ,1)+aa2(i,j,4)*var(i+1,j  ,1)+aa2(i,j,5)*var(i+2,j  ,1)&
                               +bb2(i,j,1)*var(i-2,j  ,2)+bb2(i,j,2)*var(i-1,j  ,2)+bb2(i,j,3)*var(i  ,j  ,2)+bb2(i,j,4)*var(i+1,j  ,2)+bb2(i,j,5)*var(i+2,j  ,2)&
@@ -165,7 +149,7 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
 
          !Update elemental variable
          do j = 1,NY
-            do i = 1+bb,NX
+            do i = 1,NX
                do k = 1,3
                   var(i,j,k) = var(i,j,k)+delta(i,j,k)
                enddo
@@ -177,7 +161,7 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
             resn(k) = 0.0d0
          enddo
          do j = 1,NY
-            do i = 1+bb,NX
+            do i = 1,NX
                resn(1) = resn(1)+(dabs(delta(i,j,1))/(dabs(var(i,j,1))+1.0d-2))**2.0d0
                resn(2) = resn(2)+(dabs(delta(i,j,2))/(dabs(var(i,j,2))+1.0d16*1.0d3/NESTAR))**2.0d0
                resn(3) = resn(3)+(dabs(delta(i,j,3))/(dabs(var(i,j,3))+1.0d16*1.0d3/NESTAR))**2.0d0
@@ -192,7 +176,7 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
 
 
       do j = 1,NY
-         do i = 1+bb,NX
+         do i = 1,NX
             phii(i,j) =-var(i,j,1)
             uele(i,j) = var(i,j,2)/nele(i,j)*NESTAR
             vele(i,j) = var(i,j,3)/nele(i,j)*NESTAR
@@ -208,13 +192,6 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
       enddo
    enddo
    if(maxpot.gt.1.5d0*PHIA .or. minpot.lt.-0.5d0*PHIA) then
-      !do j = 1,NY
-      !   do i = 1,NX
-      !      phii(i,j) = init(i,j,1)
-      !      uele(i,j) = init(i,j,2)
-      !      vele(i,j) = init(i,j,3)
-      !   enddo
-      !enddo
       write(*,*) maxpot,minpot
    endif
 
@@ -227,7 +204,7 @@ subroutine MassMomentumHES(nele,Tele,phii,uele,vele,qion,Omee,cond,resn,cfl,lpel
          enddo
       enddo
       do j = 1,NY
-         acurrent = acurrent + nele(1+bb,j)*uele(1+bb,j)*DYL*ZL
+         acurrent = acurrent + nele(1,j)*uele(1,j)*DYL*ZL
       enddo
       do k = 1,3
          resn_ave(k) = resn_ave(k)+resn(k)
@@ -280,16 +257,15 @@ subroutine SourceTerm(ne,te,qion,sce)
    use parameters_mod
    use global_mod
    implicit none
-   integer :: i,j,bb
+   integer :: i,j
    double precision,dimension(1:NX,1:NY),intent(in)  :: ne,te,qion
    double precision,dimension(1:NX,1:NY,3),intent(out) :: sce
-   bb = bound
 
    !Calculation of pressure terms by 2nd-order central differencing
-   !$omp parallel default(none),private(i,j),shared(ne,qion,te,sce,bb)
+   !$omp parallel default(none),private(i,j),shared(ne,qion,te,sce)
    !$omp do
    do j = 1,NY
-      do i = 1+bb,NX
+      do i = 1,NX
          sce(i,j,1) =-qion(i,j)
          if     (i.eq.1) then
             sce(i,j,2) = 0.5d0/DXL*(-3.0d0*te(i,j)      +4.0d0*te(i+1,j  )      -te(i+2,j  ))&
@@ -302,16 +278,12 @@ subroutine SourceTerm(ne,te,qion,sce)
                         +0.5d0/DXL*( 3.0d0*dlog(ne(i,j))-4.0d0*dlog(ne(i-1,j  ))+dlog(ne(i-2,j  )))*te(i,j)
          endif
          if     (j.eq.1) then
-            !sce(i,j,3) = 0.5d0/DYL*(-3.0d0*te(i,j)      +4.0d0*te(i  ,j+1)      -te(i  ,j+2))&
-            !            +0.5d0/DYL*(-3.0d0*dlog(ne(i,j))+4.0d0*dlog(ne(i  ,j+1))-dlog(ne(i  ,j+2)))*te(i,j)
             sce(i,j,3) = 0.5d0/DYL*(te(i,j+1)      -te(i,NY))&
                         +0.5d0/DYL*(dlog(ne(i,j+1))-dlog(ne(i,NY)))*te(i,j)
          else if(j.ge.2 .and. j.le.NY-1) then
             sce(i,j,3) = 0.5d0/DYL*(te(i,j+1)      -te(i,j-1))&
                         +0.5d0/DYL*(dlog(ne(i,j+1))-dlog(ne(i,j-1)))*te(i,j)
          else if(j.eq.NY) then
-            !sce(i,j,3) = 0.5d0/DYL*( 3.0d0*te(i,j)      -4.0d0*te(i  ,j-1)      +te(i  ,j-2))&
-            !            +0.5d0/DYL*( 3.0d0*dlog(ne(i,j))-4.0d0*dlog(ne(i  ,j-1))+dlog(ne(i  ,j-2)))*te(i,j)
             sce(i,j,3) = 0.5d0/DYL*(te(i,1)        -te(i,j-1))&
                         +0.5d0/DYL*(dlog(ne(i,1))  -dlog(ne(i,j-1)))*te(i,j)
          endif
@@ -324,54 +296,6 @@ subroutine SourceTerm(ne,te,qion,sce)
 end subroutine
 
 
-!-----------------------------------------------------------------------
-
-subroutine HESDiagonalInverse(NX,NY,dt,aa,bb,cc,dd,ee,ff,gg,hh,ss,dinv)
-
-   implicit none
-   integer :: i,j
-   integer,intent(in)                                  :: NX,NY
-   double precision,dimension(1:NX,1:NY,5),intent(in)  :: aa,bb,cc,dd,ee,ff,gg,hh
-   double precision,dimension(1:NX,1:NY,4),intent(in)  :: ss
-   double precision,dimension(1:NX,1:NY,9),intent(out) :: dinv
-   double precision,dimension(3,3) :: a
-   double precision,intent(in)                         :: dt
-   double precision              :: det
-
-   !Calculation of switch
-   !$omp parallel default(none),private(i,j,a,det),shared(NX,NY,dt,aa,bb,cc,dd,ee,ff,gg,hh,ss,dinv)
-   !$omp do
-   do j = 1,NY
-      do i = 1,NX
-         a(1,1) = 1.0d0+dt*(aa(i,j,3)+ee(i,j,3))
-         a(1,2) = dt*bb(i,j,3)
-         a(1,3) = dt*ff(i,j,3)
-         a(2,1) = dt*cc(i,j,3)
-         a(2,2) = 1.0d0+dt*(dd(i,j,3))+ss(i,j,1)
-         a(2,3) = 0.0d0!dt*ss(i,j,2)
-         a(3,1) = dt*gg(i,j,3)
-         a(3,2) = 0.0d0!dt*ss(i,j,3)
-         a(3,3) = 1.0d0+dt*(hh(i,j,3))+ss(i,j,4)
-         det = a(1,1)*a(2,2)*a(3,3)+a(2,1)*a(3,2)*a(1,3)+a(3,1)*a(1,2)*a(2,3)&
-              -a(1,1)*a(3,2)*a(2,3)-a(3,1)*a(2,2)*a(1,3)-a(2,1)*a(1,2)*a(3,3)
-         if(dabs(det).lt.1.0d-3) write(*,'(A18,2I5,1E12.3)') 'Warning...zero det',i,j,det;det = 1.0d0
-         dinv(i,j,1) = 1.0d0/det*(a(2,2)*a(3,3)-a(2,3)*a(3,2))
-         dinv(i,j,2) = 1.0d0/det*(a(1,3)*a(3,2)-a(1,2)*a(3,3))
-         dinv(i,j,3) = 1.0d0/det*(a(1,2)*a(2,3)-a(1,3)*a(2,2))
-         dinv(i,j,4) = 1.0d0/det*(a(2,3)*a(3,1)-a(2,1)*a(3,3))
-         dinv(i,j,5) = 1.0d0/det*(a(1,1)*a(3,3)-a(1,3)*a(3,1))
-         dinv(i,j,6) = 1.0d0/det*(a(1,3)*a(2,1)-a(1,1)*a(2,3))
-         dinv(i,j,7) = 1.0d0/det*(a(2,1)*a(3,2)-a(2,2)*a(3,1))
-         dinv(i,j,8) = 1.0d0/det*(a(1,2)*a(3,1)-a(1,1)*a(3,2))
-         dinv(i,j,9) = 1.0d0/det*(a(1,1)*a(2,2)-a(1,2)*a(2,1))
-      enddo
-   enddo
-   !$omp end do
-   !$omp end parallel
-
-   return
-end subroutine
-
 
 !***********************************************************************
 
@@ -380,19 +304,17 @@ subroutine CFL_SCE(ss,cfl)
    use parameters_mod
    use global_mod
    implicit none
-   integer :: i,j,bb
+   integer :: i,j
    double precision :: x1
    double precision,dimension(1:NX,1:NY,4),intent(in)  :: ss
    double precision,dimension(3),intent(out)   :: cfl
-
-   bb = bound
 
    !Calculation of CFL and SCE number
    cfl(1) = 1.0d0*DTELE/DXL
    cfl(2) = 1.0d0*DTELE/DYL
    cfl(3) = 0.0d0
    do j = 1,NY
-      do i = 1+bb,NX
+      do i = 1,NX
          x1 = dmax1(dabs(ss(i,j,1)),dabs(ss(i,j,2)),dabs(ss(i,j,3)),dabs(ss(i,j,4)))*DTELE
          if(x1.gt.cfl(3)) then
             cfl(3) = x1
